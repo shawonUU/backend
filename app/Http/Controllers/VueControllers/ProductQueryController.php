@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\VueControllers;
 
+use Auth;
+use App\Models\job;
 use App\Models\Product;
 use App\Models\ProductQuery;
-use App\Models\job;
-use Auth;
 use Illuminate\Http\Request;
+use Laravel\Sanctum\PersonalAccessToken;
+use Illuminate\Support\Facades\Validator;
 
 class ProductQueryController extends Controller
 {
@@ -36,32 +38,36 @@ class ProductQueryController extends Controller
      */
     public function store(Request $request)
     {
-        return $request->header();
-        return "hello";
-        $this->validate($request, [
-            'question' => 'required|string',
-        ]);
+        $data = $request->header();
+        $token = $data["token"][0];
 
+        $token = PersonalAccessToken::findToken($token);
+        if(!$token) return response()->json(["Unauthorized"], 401);
+        $user = $token->tokenable;
+        if(!$user) return response()->json(["Unauthorized"], 401);
+         $question = $request->header("question");
+        // $dataRules =[
+        //     'question' => ['required|string'],
+        // ];
+        // return $validator = Validator::make($question, $dataRules);
 
         $query = new ProductQuery();
-        $query->customer_id = Auth::id();
-
+        $query->customer_id = $user->id;
+        $productId = $request->header("productId");
         if($request->has('job_id')){
             $job = Job::find($request->job_id);
             $query->seller_id = $job->user_id;
             $query->job_id = $request->job_id;
         }
         else{
-            $product = Product::find($request->product);
+            $product = Product::find($productId);
             $query->product_id = $product->id;
             $query->seller_id = $product->user_id;
         }
-
-
-        $query->question = $request->question;
+        $query->question =  $question;
         $query->save();
-        flash(translate('Your query has been submittes successfully'))->success();
-        return redirect()->back();
+        // flash(translate('Your query has been submittes successfully'))->success();
+        // return redirect()->back();
     }
 
     /**

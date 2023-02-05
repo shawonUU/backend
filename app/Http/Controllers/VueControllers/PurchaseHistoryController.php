@@ -24,7 +24,6 @@ class PurchaseHistoryController extends Controller
         if(!$token) return response()->json(["Unauthorized"], 401);
         $user = $token->tokenable;
         if(!$user) return response()->json(["Unauthorized"], 401);
-
         return  $orders = Order::where('user_id', $user->id)->orderBy('code', 'desc')->paginate(9);
         return view('frontend.user.purchase_history', compact('orders'));
     }
