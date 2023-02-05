@@ -95,16 +95,16 @@ class CartController extends Controller
         $data = array();
 
         if($user != null) {
-            $user_id = $user->id;
+           $user_id = $user->id;
             $data['user_id'] = $user_id;
             $carts = Cart::where('user_id', $user_id)->get();
         } else {
 
-            if($tempUser) {;
+            if($tempUser != "null" && $tempUser !=null) {
                 $temp_user_id = $tempUser;
             } else {
                 $temp_user_id = bin2hex(random_bytes(10));
-                $tempUser = $temp_user_id;
+               $tempUser = $temp_user_id;
             }
             $data['temp_user_id'] = $temp_user_id;
             $carts = Cart::where('temp_user_id', $temp_user_id)->get();
