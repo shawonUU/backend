@@ -58,6 +58,7 @@ class HomeController extends Controller
     }
 
     public function getNaveData(Request $request){
+
         $user = null;
         $tempUser = $request->temp_user;
         $token = PersonalAccessToken::findToken($request->token);
@@ -65,14 +66,14 @@ class HomeController extends Controller
             $user = $token->tokenable;
             if(!$user) $user = null;
         }
-
+// return $user;
         $cart = [];
         $totalCart = 0;
         $totalWishlist = 0;
         if($user){
             $totalWishlist = count($user->wishlists);
-            $user_id = Auth::user()->id;
-            $cart = \App\Models\Cart::where('user_id', $user_id)->get();
+            $user_id =$user->id;
+           $cart = \App\Models\Cart::where('user_id', $user_id)->get();
             $totalCart = count($cart);
         }else{
             $totalCart = 0;
@@ -85,12 +86,13 @@ class HomeController extends Controller
 
         $total = 0;
         foreach ($cart as $key => $cartItem){
-
-            $product = \App\Models\Product::find($cartItem['product_id']);
-            if($product)$cart[$key]->product = new ProductCollection([$product]);
+    //    echo $cartItem['product_id'].'  ';
+            $product = Product::where('id', $cartItem['product_id'])->first();
+            // return 'okk';
+            if($product) $cart[$key]->product = new ProductCollection([$product]);
             else $product = null;
             $cart[$key]->cart_product_price = cart_product_price($cartItem, $product);
-            $total = $total + cart_product_price($cartItem, $product, false) * $cartItem['quantity'];
+            $total = $total + (cart_product_price($cartItem, $product, false) * $cartItem['quantity']);
         }
         $single_price = single_price($total);
 
@@ -498,6 +500,11 @@ class HomeController extends Controller
             $product_queries ="";
          }
 
+         foreach( $product_queries as $key => $query ){
+            $query->user_name = $query->user->name;
+            $query->seller_name =$query->product->user->name;
+            $product_queries[$key]=$query;
+         }
          return response()->json([$products,$shop_details,$relatedProducts,$topSellingProduct,$vendorActivation,$coversationSystem,$club_point,$affiliteCheck,$referral_code_url,$refund_check,$refund_sticker_image,$product_query_activation,$total_query,$product_queries,$own_product_queries]);
 
 
