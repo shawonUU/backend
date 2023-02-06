@@ -40,7 +40,20 @@ class PurchaseHistoryController extends Controller
                         ->where('order_details.payment_status', 'paid')
                         ->select('order_details.id')
                         ->paginate(15);
-        return view('frontend.user.digital_purchase_history', compact('orders'));
+
+        $products = [];
+        foreach ($orders as $key => $order_id){
+            $order = \App\Models\OrderDetail::find($order_id->id);
+            $product = $order->product;
+            $temp = [];
+            $temp['orderId'] = encrypt($product->id);
+            $temp['name'] = $product->name;
+            $temp['slug'] = $product->slug;
+            array_push($products,$temp);
+        }
+        
+        return $products;
+        // return view('frontend.user.digital_purchase_history', compact('orders'));
     }
 
     public function purchase_history_details($id)
