@@ -58,7 +58,7 @@ class HomeController extends Controller
     }
 
     public function getNaveData(Request $request){
-        
+
         $user = null;
         $tempUser = $request->temp_user;
         $token = PersonalAccessToken::findToken($request->token);
@@ -83,7 +83,7 @@ class HomeController extends Controller
             }
         }
 
-        
+
         $total = 0;
         foreach ($cart as $key => $cartItem){
     //    echo $cartItem['product_id'].'  ';
@@ -95,7 +95,7 @@ class HomeController extends Controller
             $total = $total + (cart_product_price($cartItem, $product, false) * $cartItem['quantity']);
         }
         $single_price = single_price($total);
-        
+
         return response()->json(['totalCart' => $totalCart, 'totalWishlist' => $totalWishlist, 'cart' => $cart, 'single_price' => $single_price], 200);
     }
 
@@ -424,21 +424,25 @@ class HomeController extends Controller
     {
 
 
+        $user = null;
+        $referral_code_url =null;
         if($request->token!==null){
-        $token = PersonalAccessToken::findToken($request->token);
-        if(!$token) return response()->json(["Unauthorized"], 401);
-        $user = $token->tokenable;
-        if(!$user) return response()->json(["Unauthorized"], 401);
+            $token = PersonalAccessToken::findToken($request->token);
+            if($token) {
+                $user = $token->tokenable;
 
-        if($user->referral_code == null){
-            $user->referral_code = substr($user->id.Str::random(10), 0, 10);
-            $user->save();
-        }
+                if($user){
+                    if($user->referral_code == null){
+                        $user->referral_code = substr($user->id.Str::random(10), 0, 10);
+                        $user->save();
+                    }
 
-         $referral_code =  $user->referral_code;
-         $referral_code_url = ($request->selfDomain.'product').'/'.$slug."?product_referral_code=$referral_code";
-         }else{
-            $referral_code_url =null;
+                    $referral_code =  $user->referral_code;
+                    $referral_code_url = ($request->selfDomain.'product').'/'.$slug."?product_referral_code=$referral_code";
+
+
+                }
+            }
          }
 
 
@@ -487,8 +491,21 @@ class HomeController extends Controller
             $product_query_activation = 0;
          }
          $total_query = ProductQuery::where('product_id', $detailedProduct->id)->count();
-        $product_queries = ProductQuery::where('product_id', $detailedProduct->id)->where('customer_id', '!=', $user->id)->latest('id')->paginate(10);
-         return response()->json([$products,$shop_details,$relatedProducts,$topSellingProduct,$vendorActivation,$coversationSystem,$club_point,$affiliteCheck,$referral_code_url,$refund_check,$refund_sticker_image,$product_query_activation,$total_query,$product_queries]);
+         $product_queries = [];
+         $own_product_queries=[];
+         if($user){
+            $product_queries = ProductQuery::where('product_id', $detailedProduct->id)->where('customer_id', '!=', $user->id)->latest('id')->paginate(10);
+            $own_product_queries = $user->product_queries->where('product_id',$detailedProduct->id);
+         }else{
+            $product_queries ="";
+         }
+
+         foreach( $product_queries as $key => $query ){
+            $query->user_name = $query->user->name;
+            $query->seller_name =$query->product->user->name;
+            $product_queries[$key]=$query;
+         }
+         return response()->json([$products,$shop_details,$relatedProducts,$topSellingProduct,$vendorActivation,$coversationSystem,$club_point,$affiliteCheck,$referral_code_url,$refund_check,$refund_sticker_image,$product_query_activation,$total_query,$product_queries,$own_product_queries]);
 
 
         // Pagination using Ajax
