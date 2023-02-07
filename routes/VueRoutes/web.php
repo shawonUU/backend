@@ -313,7 +313,7 @@ Route::group(['middleware' => ['vue_user', 'vue_unbanned']], function() {
 
 Route::resource('purchase_history', PurchaseHistoryController::class)->middleware(['auth:sanctum']);
 
-Route::group(['middleware' => ['customer', 'verified', 'unbanned']], function() {
+Route::group(['middleware' => ['auth:sanctum','customer', 'verified', 'unbanned']], function() {
 
     // Checkout Routs
     Route::group(['prefix' => 'checkout'], function() {

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\VueControllers;
 use Illuminate\Http\Request;
 use Auth;
 use App\Models\Wishlist;
+use App\Http\Resources\VUE\ProductDetailCollection;
+use App\Http\Resources\VUE\ProductCollection;
 
 class WishlistController extends Controller
 {
@@ -15,8 +17,17 @@ class WishlistController extends Controller
      */
     public function index()
     {
+        // return 'hello';
         $wishlists = Wishlist::where('user_id', Auth::user()->id)->paginate(9);
-        return view('frontend.user.view_wishlist', compact('wishlists'));
+
+        foreach($wishlists as $key => $wishlist){
+        //     $product = $wishlist->product;
+            $product = new ProductCollection([$wishlist->product]);
+            $wishlists[$key]->productData = $product;
+        }
+
+        return response()->json(['wishlists' => $wishlists], 200);
+        // return view('frontend.user.view_wishlist', compact('wishlists'));
     }
 
     /**
