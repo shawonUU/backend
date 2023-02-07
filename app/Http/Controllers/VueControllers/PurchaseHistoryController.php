@@ -4,6 +4,7 @@ namespace App\Http\Controllers\VueControllers;
 
 use DB;
 use Auth;
+use Carbon\Carbon;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -24,8 +25,19 @@ class PurchaseHistoryController extends Controller
         if(!$token) return response()->json(["Unauthorized"], 401);
         $user = $token->tokenable;
         if(!$user) return response()->json(["Unauthorized"], 401);
-        return  $orders = Order::where('user_id', $user->id)->orderBy('code', 'desc')->paginate(9);
-        return view('frontend.user.purchase_history', compact('orders'));
+
+       $orders = Order::where('user_id', $user->id)->orderBy('code', 'desc')->paginate(9);
+        $totalOrder = Order::where('user_id', $user->id)->get()->count();
+
+        foreach( Order::where('user_id', $user->id)->orderBy('code', 'desc')->paginate(9) as $key => $order ){
+            $today= Carbon::today();
+            $diffdate = $today->diffInDays($order->updated_at);
+            $order->diff_date = $diffdate;
+            $order->date = date('d-m-Y', $order->date);
+            $orders[$key]=$order;
+         }
+          return response()->json([$orders,$totalOrder]);
+        // return view('frontend.user.purchase_history', compact('orders'));
     }
 
     public function digital_index()
@@ -50,7 +62,7 @@ class PurchaseHistoryController extends Controller
             $temp['slug'] = $product->slug;
             array_push($products,$temp);
         }
-        
+
         return $products;
         // return view('frontend.user.digital_purchase_history', compact('orders'));
     }
