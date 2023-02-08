@@ -40,17 +40,17 @@ class PurchaseHistoryController extends Controller
         // return view('frontend.user.purchase_history', compact('orders'));
     }
 
-    public function digital_index()
+    public function digital_index(Request $request)
     {
-        $orders = DB::table('orders')
-                        ->orderBy('code', 'desc')
-                        ->join('order_details', 'orders.id', '=', 'order_details.order_id')
-                        ->join('products', 'order_details.product_id', '=', 'products.id')
-                        ->where('orders.user_id', Auth::user()->id)
-                        ->where('products.digital', '1')
-                        ->where('order_details.payment_status', 'paid')
-                        ->select('order_details.id')
-                        ->paginate(15);
+      return $orders = DB::table('orders')
+      ->orderBy('code', 'desc')
+      ->join('order_details', 'orders.id', '=', 'order_details.order_id')
+    //   ->join('products', 'order_details.product_id', '=', 'products.id')
+      ->where('orders.user_id', Auth::user()->id)
+    //   ->where('products.digital', '1')
+      ->where('order_details.payment_status', 'paid')
+      ->select('order_details.id')
+      ->paginate(15);
 
         $products = [];
         foreach ($orders as $key => $order_id){
@@ -63,7 +63,6 @@ class PurchaseHistoryController extends Controller
             array_push($products,$temp);
         }
 
-        return $products;
         // return view('frontend.user.digital_purchase_history', compact('orders'));
     }
 

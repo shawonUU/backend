@@ -28,7 +28,7 @@ Route::group(['prefix' =>'admin', 'middleware' => ['auth', 'admin']], function()
 });
 
 //FrontEnd User panel
-Route::group(['middleware' => ['user', 'verified']], function(){
+Route::group(['middleware' => ['auth:sanctum','user', 'verified']], function(){
     Route::controller(RefundRequestController::class)->group(function () {
         Route::post('refund-request-send/{id}', 'request_store')->name('refund_request_send');
         Route::get('refund-request', 'vendor_index')->name('vendor_refund_request');

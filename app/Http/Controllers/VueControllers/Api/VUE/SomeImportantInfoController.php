@@ -7,6 +7,7 @@ use App\Models\Shop;
 use App\Models\Brand;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use Laravel\Sanctum\PersonalAccessToken;
 use App\Http\Resources\VUE\BlogCllection;
@@ -99,7 +100,22 @@ class SomeImportantInfoController extends Controller
       $refund_request = addon_is_activated('refund_request');
       $classified_product = get_setting('classified_product');
       $auction = addon_is_activated('auction');
-      return response()->json([$checkConversationSystem,$conversation,$delivery_viewed,$payment_status_viewed,$refund_request,$classified_product,$auction]);
+      $wallet_system = get_setting('wallet_system');
+      $club_point = addon_is_activated('club_point');
+
+     $affiliate_system =  "";
+     if(addon_is_activated('affiliate_system') && $user->affiliate_user != null && $user->affiliate_user->status){
+        $affiliate_system=true;
+     }else{
+        $affiliate_system=false;
+     }
+
+     $support_ticket = DB::table('tickets')
+                        ->where('client_viewed', 0)
+                        ->where('user_id', $user->id)
+                        ->count();
+
+      return response()->json([$checkConversationSystem,$conversation,$delivery_viewed,$payment_status_viewed,$refund_request,$classified_product,$auction,$wallet_system,$club_point,$affiliate_system,$support_ticket]);
    }
 
 }
