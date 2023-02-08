@@ -17,11 +17,9 @@ class WishlistController extends Controller
      */
     public function index()
     {
-        // return 'hello';
         $wishlists = Wishlist::where('user_id', Auth::user()->id)->paginate(9);
 
         foreach($wishlists as $key => $wishlist){
-        //     $product = $wishlist->product;
             $product = new ProductCollection([$wishlist->product]);
             $wishlists[$key]->productData = $product;
         }
@@ -66,7 +64,8 @@ class WishlistController extends Controller
         $wishlist = Wishlist::findOrFail($request->id);
         if($wishlist!=null){
             if(Wishlist::destroy($request->id)){
-                return view('frontend.partials.wishlist');
+                // return view('frontend.partials.wishlist');
+                return "Removed item from wishlist";
             }
         }
     }

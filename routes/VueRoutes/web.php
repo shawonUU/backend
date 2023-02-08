@@ -344,7 +344,7 @@ Route::group(['middleware' => ['auth:sanctum','customer', 'verified', 'unbanned'
 
     // Wishlist
     Route::resource('wishlists', WishlistController::class);
-    Route::post('/wishlists/remove', [WishlistController::class, 'remove'])->name('wishlists.remove');
+    Route::get('/wishlists_remove', [WishlistController::class, 'remove'])->name('wishlists.remove');
 
     // Wallet
     Route::controller(WalletController::class)->group(function () {
