@@ -12,13 +12,20 @@ class WishlistController extends Controller
 
     public function index()
     {
-        $product_ids = Wishlist::where('user_id', auth()->user()->id)->pluck("product_id")->toArray();
-        $existing_product_ids = Product::whereIn('id', $product_ids)->pluck("id")->toArray();
+        $wistlistProduct = Wishlist::join('products', 'products.id', '=', 'wishlists.product_id')
+        ->where('wishlists.user_id', auth()->user()->id)
+        ->select('wishlists.id as wishlist_id','wishlists.product_id', 'products.*')
+        ->latest()->get();
+        return new WishlistCollection($wistlistProduct);
 
-        $query = Wishlist::query();
-        $query->where('user_id', auth()->user()->id)->whereIn("product_id", $existing_product_ids);
 
-        return new WishlistCollection($query->latest()->get());
+        // $existing_product_ids = Product::whereIn('id', $product_ids)->pluck("id")->toArray();
+        // $existing_products = Product::whereIn('id', $product_ids)->get()->toArray();
+
+        //  $query = Wishlist::query();
+        // $wistlistProduct =  $query->where('user_id', auth()->user()->id)->whereIn("product_id", $existing_product_ids)->latest()->get();
+        //  $wistlistProduct;
+        // return new WishlistCollection($query->latest()->get());
     }
 
     public function store(Request $request)
