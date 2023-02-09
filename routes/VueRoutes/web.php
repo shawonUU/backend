@@ -282,7 +282,7 @@ Route::controller(StripeController::class)->group(function () {
 Route::controller(CompareController::class)->group(function () {
     Route::get('/compare', 'index')->name('compare');
     Route::get('/compare/reset', 'reset')->name('compare.reset');
-    Route::post('/compare/addToCompare', 'addToCompare')->name('compare.addToCompare');
+    Route::get('/compare/addToCompare', 'addToCompare')->name('compare.addToCompare');
 });
 
 // Subscribe

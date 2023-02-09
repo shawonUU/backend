@@ -35,6 +35,8 @@ class ProductCollection extends ResourceCollection
                     'earn_point' => (double)$data->earn_point,
                     'sales' => (integer) $data->num_of_sale,
                     'wholesale_product' => (integer)$data->wholesale_product,
+                    'brand_name'=> $data->brand->name,
+                    'category_name'=> $data->category->name,
                     'links' => [
                         'details' => route('products.show', $data->id),
                         'reviews' => route('api.reviews.index', $data->id),

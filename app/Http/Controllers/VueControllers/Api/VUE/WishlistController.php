@@ -16,7 +16,9 @@ class WishlistController extends Controller
         ->where('wishlists.user_id', auth()->user()->id)
         ->select('wishlists.id as wishlist_id','wishlists.product_id', 'products.*')
         ->latest()->get();
-        return new WishlistCollection($wistlistProduct);
+        $wishlist  = new WishlistCollection($wistlistProduct);
+        $nowishlist_image =  asset('public/assets/img/nothing.svg');//https://localhost/backend/public/assets/img/nothing.svg
+        return ['wishlist' => $wishlist, 'nowishlist_image' => $nowishlist_image];
 
 
         // $existing_product_ids = Product::whereIn('id', $product_ids)->pluck("id")->toArray();
