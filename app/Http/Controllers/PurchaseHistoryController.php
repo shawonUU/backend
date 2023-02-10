@@ -22,7 +22,7 @@ class PurchaseHistoryController extends Controller
 
     public function digital_index()
     {
-        $orders = DB::table('orders')
+       $orders = DB::table('orders')
                         ->orderBy('code', 'desc')
                         ->join('order_details', 'orders.id', '=', 'order_details.order_id')
                         ->join('products', 'order_details.product_id', '=', 'products.id')
@@ -118,9 +118,9 @@ class PurchaseHistoryController extends Controller
 
         return back();
     }
-    
+
    public function dontpay($id){
-       
+
        $order = Order::where('id', $id)->where('user_id', auth()->user()->id)->first();
        if($order->dontpay==null){
            $order->dontpay=1;
@@ -132,9 +132,9 @@ class PurchaseHistoryController extends Controller
             $order->save();
            flash(translate('Your request withdraw succesfully'))->success();
        }
-      
+
          return back();
-       
+
    }
-    
+
 }

@@ -190,7 +190,7 @@ if (!function_exists('format_price')) {
         }
 
 
-        // Minimize the price 
+        // Minimize the price
         if ($isMinimize) {
             $temp = number_format($price / 1000000000, get_setting('no_of_decimals'), ".", "");
 
@@ -274,7 +274,7 @@ if (!function_exists('cart_product_price')) {
             $price = $product->bids->max('amount');
         }
 
-        //calculation of taxes 
+        //calculation of taxes
         if ($tax) {
             $taxAmount = 0;
             foreach ($product->taxes as $product_tax) {
@@ -325,7 +325,7 @@ if (!function_exists('cart_product_tax')) {
             }
         }
 
-        //calculation of taxes 
+        //calculation of taxes
         $tax = 0;
         foreach ($product->taxes as $product_tax) {
             if ($product_tax->tax_type == 'percent') {
@@ -632,11 +632,13 @@ if (!function_exists('home_base_price')) {
         $price = $product->unit_price;
         $tax = 0;
 
-        foreach ($product->taxes as $product_tax) {
-            if ($product_tax->tax_type == 'percent') {
-                $tax += ($price * $product_tax->tax) / 100;
-            } elseif ($product_tax->tax_type == 'amount') {
-                $tax += $product_tax->tax;
+        if($product->taxes){
+            foreach ($product->taxes as $product_tax) {
+                if ($product_tax->tax_type == 'percent') {
+                    $tax += ($price * $product_tax->tax) / 100;
+                } elseif ($product_tax->tax_type == 'amount') {
+                    $tax += $product_tax->tax;
+                }
             }
         }
         $price += $tax;
@@ -672,11 +674,13 @@ if (!function_exists('home_discounted_base_price_by_stock_id')) {
             }
         }
 
-        foreach ($product->taxes as $product_tax) {
-            if ($product_tax->tax_type == 'percent') {
-                $tax += ($price * $product_tax->tax) / 100;
-            } elseif ($product_tax->tax_type == 'amount') {
-                $tax += $product_tax->tax;
+        if($product->taxes){
+            foreach ($product->taxes as $product_tax) {
+                if ($product_tax->tax_type == 'percent') {
+                    $tax += ($price * $product_tax->tax) / 100;
+                } elseif ($product_tax->tax_type == 'amount') {
+                    $tax += $product_tax->tax;
+                }
             }
         }
         $price += $tax;
@@ -711,13 +715,15 @@ if (!function_exists('home_discounted_base_price')) {
             }
         }
 
-        foreach ($product->taxes as $product_tax) {
-            if ($product_tax->tax_type == 'percent') {
-                $tax += ($price * $product_tax->tax) / 100;
-            } elseif ($product_tax->tax_type == 'amount') {
-                $tax += $product_tax->tax;
+       if($product->taxes){
+            foreach ($product->taxes as $product_tax) {
+                if ($product_tax->tax_type == 'percent') {
+                    $tax += ($price * $product_tax->tax) / 100;
+                } elseif ($product_tax->tax_type == 'amount') {
+                    $tax += $product_tax->tax;
+                }
             }
-        }
+       }
         $price += $tax;
 
         return $formatted ? format_price(convert_price($price)) : $price;

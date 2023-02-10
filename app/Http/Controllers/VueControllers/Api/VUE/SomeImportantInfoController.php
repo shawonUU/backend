@@ -7,13 +7,15 @@ use App\Models\Shop;
 use App\Models\Brand;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
-use App\Http\Controllers\VueControllers\Controller;
+use Laravel\Sanctum\PersonalAccessToken;
 use App\Http\Resources\VUE\BlogCllection;
 use App\Http\Resources\VUE\ShopCollection;
 use App\Http\Resources\VUE\BrandCollection;
 use App\Http\Resources\VUE\BlogDetailsCollection;
 use App\Http\Resources\VUE\ProductMiniCollection;
+use App\Http\Controllers\VueControllers\Controller;
 
 class SomeImportantInfoController extends Controller
 {
@@ -78,6 +80,42 @@ class SomeImportantInfoController extends Controller
         }
    }
    return new ProductMiniCollection($flashDealProduct);
+   }
+
+   function getDataForUserDashboard(Request $request){
+
+    $token =$request->token;;
+
+    $token = PersonalAccessToken::findToken($token);
+    if(!$token) return response()->json(["Unauthorized"], 401);
+    $user = $token->tokenable;
+    if(!$user) return response()->json(["Unauthorized"], 401);
+
+      $conversation = \App\Models\Conversation::where('sender_id', $user->id)->where('sender_viewed', 0)->get();
+      $checkConversationSystem = get_setting('conversation_system');
+
+      $delivery_viewed = \App\Models\Order::where('user_id', $user->id)->where('delivery_viewed', 0)->get()->count();
+      $payment_status_viewed = \App\Models\Order::where('user_id', $user->id)->where('payment_status_viewed', 0)->get()->count();
+
+      $refund_request = addon_is_activated('refund_request');
+      $classified_product = get_setting('classified_product');
+      $auction = addon_is_activated('auction');
+      $wallet_system = get_setting('wallet_system');
+      $club_point = addon_is_activated('club_point');
+
+     $affiliate_system =  "";
+     if(addon_is_activated('affiliate_system') && $user->affiliate_user != null && $user->affiliate_user->status){
+        $affiliate_system=true;
+     }else{
+        $affiliate_system=false;
+     }
+
+     $support_ticket = DB::table('tickets')
+                        ->where('client_viewed', 0)
+                        ->where('user_id', $user->id)
+                        ->count();
+
+      return response()->json([$checkConversationSystem,$conversation,$delivery_viewed,$payment_status_viewed,$refund_request,$classified_product,$auction,$wallet_system,$club_point,$affiliate_system,$support_ticket]);
    }
 
 }

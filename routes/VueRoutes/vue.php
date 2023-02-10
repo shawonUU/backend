@@ -27,6 +27,11 @@ Route::get('/all_brands','App\Http\Controllers\VueControllers\Api\VUE\SomeImport
 Route::get('/all_shops','App\Http\Controllers\VueControllers\Api\VUE\SomeImportantInfoController@allShops');
 Route::get('/check-flash-deal','App\Http\Controllers\VueControllers\Api\VUE\SomeImportantInfoController@cheakFlashDeal');
 Route::get('/flash-deal-product','App\Http\Controllers\VueControllers\Api\VUE\SomeImportantInfoController@flashDealProduct');
+
+//Data for dahsboard
+
+Route::get('data-userdashboard','App\Http\Controllers\VueControllers\Api\VUE\SomeImportantInfoController@getDataForUserDashboard');
+
 Route::controller(SearchController::class)->group(function () {
     Route::get('/search', 'index')->name('search');
     Route::get('/search?keyword={search}', 'index')->name('suggestion.search');
@@ -41,6 +46,7 @@ Route::get('v3/job/{slug}', 'App\Http\Controllers\VueControllers\Api\VUE\JobCont
 Route::get('v3/jobapplication', 'App\Http\Controllers\VueControllers\Api\VUE\JobController@job_apply');
 Route::post('v3/productstore','App\Http\Controllers\VueControllers\Api\VUE\Seller\ProductController@productstore');
 Route::post('v3/productupdate/{id}','App\Http\Controllers\VueControllers\Api\VUE\Seller\ProductController@productupdate');
+
 // Route::post('v2/sellerproductdetails/{id}', function(){
 //     return "hello";
 // });

@@ -4,14 +4,22 @@ namespace App\Http\Controllers\VueControllers;
 
 use Illuminate\Http\Request;
 use App\Models\Category;
+use App\Models\Product;
+
+use App\Http\Resources\VUE\ProductCollection;
 
 class CompareController extends Controller
 {
     public function index(Request $request)
     {
+        
+        $products = Product::whereIn('id', $request->ids)->get();
+        return new ProductCollection($products);
         //dd($request->session()->get('compare'));
-        $categories = Category::all();
-        return view('frontend.view_compare', compact('categories'));
+        // $categories = Category::all();
+        // return view('frontend.view_compare', compact('categories'));
+
+
     }
 
     //clears the session data for compare

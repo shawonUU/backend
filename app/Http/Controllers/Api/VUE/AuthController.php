@@ -22,7 +22,7 @@ class AuthController extends Controller
 {
     public function signup(Request $request)
     {
-        
+
         if (User::where('email', $request->email_or_phone)->orWhere('phone', $request->email_or_phone)->first() != null) {
             return response()->json([
                 'result' => false,
@@ -163,7 +163,7 @@ class AuthController extends Controller
                     'email' => $request->email,
                     'password' => $request->password,
                 ];
-                
+
                 // $user = Auth::attempt($credentials);
                 // return Auth::user();
                 // if ($user->email_verified_at == null) {
@@ -275,7 +275,8 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'avatar' => $user->avatar,
                 'avatar_original' => uploaded_asset($user->avatar_original),
-                'phone' => $user->phone
+                'phone' => $user->phone,
+                'phone' => $user->phone,
             ]
         ]);
     }
