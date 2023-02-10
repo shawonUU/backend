@@ -23,12 +23,11 @@ class CartController extends Controller
             if($request->session()->get('temp_user_id')) {
                 Cart::where('temp_user_id', $request->session()->get('temp_user_id'))
                         ->update(
-                                [
-                                    'user_id' => $user_id,
-                                    'temp_user_id' => null
-                                ]
+                        [
+                            'user_id' => $user_id,
+                            'temp_user_id' => null,
+                        ]
                 );
-
                 Session::forget('temp_user_id');
             }
             $carts = Cart::where('user_id', $user_id)->get();

@@ -116,7 +116,7 @@ Route::resource('job',jobController::class);
 
      Route::resource('application',ApplicationController::class);
 
-Route::get('/followed_shop/{id}',[HomeController::class, 'followed_shop'])->name('followed_shop');
+Route::get('/followed_shop/{id}',[HomeController::class, 'followed_shop'])->name('followed_shop')->middleware('auth:sanctum');
 
 
 Route::controller(DemoController::class)->group(function () {
