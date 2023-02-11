@@ -58,7 +58,6 @@ class HomeController extends Controller
 
 
      public function followed_shop($shop_id){
-
          if (Auth::check()) {
 
             if(Auth::user()->followed_shop!=null){
@@ -75,6 +74,7 @@ class HomeController extends Controller
                                      $user = User::findorfail(Auth::user()->id);
                                     $user->followed_shop=implode(", ",$followed_shop1);
                                     $user->save();
+                                    
                                      flash(translate('Unfollow done!'))->warning();
                                      }
 

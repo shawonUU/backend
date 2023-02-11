@@ -106,7 +106,7 @@ class HomeController extends Controller
 
 
      public function followed_shop($shop_id){
-
+        // return 'okkkkkkkkkkkkk';
          if (Auth::check()) {
 
             if(Auth::user()->followed_shop!=null){
@@ -123,44 +123,47 @@ class HomeController extends Controller
                                      $user = User::findorfail(Auth::user()->id);
                                     $user->followed_shop=implode(", ",$followed_shop1);
                                     $user->save();
-                                     flash(translate('Unfollow done!'))->warning();
+                                    return 'Unfollow done!';
+                                    //  flash(translate('Unfollow done!'))->warning();
                                      }
 
                         }
                         else{
-                            $follow=0;
-                             $followed_shop[]= Auth::user()->followed_shop;
+                                $follow=0;
+                                $followed_shop[]= Auth::user()->followed_shop;
                                 $array= Arr::add($followed_shop,'',$shop_id);
                                 $followed_shop1= Arr::flatten($array);
 
-                $user = User::findorfail(Auth::user()->id);
-                $user->followed_shop=implode(", ",$followed_shop1);
-                $user->save();
-                           flash(translate('Successfully followed'))->success();
+                                $user = User::findorfail(Auth::user()->id);
+                                $user->followed_shop=implode(", ",$followed_shop1);
+                                $user->save();
+                        //    flash(translate('Successfully followed'))->success();
+                           return 'Successfully followed';
                         }
 
-                         return redirect()->back();
+                        //  return redirect()->back();
 
                         }
 
                         else{
                             $user = User::findorfail(Auth::user()->id);
-                $user->followed_shop=$shop_id;
-                $user->save();
-                flash(translate('Successfully followed'))->success();
-                return redirect()->back();
+                            $user->followed_shop=$shop_id;
+                            $user->save();
+                            // flash(translate('Successfully followed'))->success();
+                            // return redirect()->back();
+                            return 'Successfully followed';
 
                         }
 
             }
-            else
+            // else
 
 
-            return redirect()->route('user.login');
+            // return redirect()->route('user.login');
 
 
 
-        }
+    }
 
 
 
