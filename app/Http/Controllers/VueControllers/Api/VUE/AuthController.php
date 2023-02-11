@@ -159,7 +159,6 @@ class AuthController extends Controller
                 if ($user->email_verified_at == null) {
                     return response()->json(['result' => false, 'message' => translate('Please verify your account'), 'user' => null], 401);
                 }
-                $this->addCartProductForUser($request, $user);
                 return $this->loginSuccess($user);
             } else {
                 return response()->json(['result' => false, 'message' => translate('Unauthorized'), 'user' => null], 401);
@@ -272,22 +271,5 @@ class AuthController extends Controller
         ]);
     }
 
-    public function addCartProductForUser($request, $user){
-         $tempUser = $request->temp_user;
-        if($tempUser){
-           $carts = \App\Models\Cart::where('temp_user_id', $tempUser)->get();
-            foreach($carts as $cart){
-                $cartItem = \App\Models\Cart::where('user_id', $user->id)->where('product_id', $cart->product_id)->first();
-                if($cartItem){
-                    $cartItem->quantity += $cart->quantity;
-                    $cartItem->update();
-                }
-               else{
-                    $cart->user_id = $user->id;
-                    $cart->temp_user_id = null;
-                    $cart->update();
-               }
-            }
-        }
-    }
+ 
 }

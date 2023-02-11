@@ -18,26 +18,57 @@ class CartController extends Controller
 {
     public function index(Request $request)
     {
-        if(auth()->user() != null) {
-            $user_id = Auth::user()->id;
-            if($request->session()->get('temp_user_id')) {
-                Cart::where('temp_user_id', $request->session()->get('temp_user_id'))
+
+        $user = null;
+        $tempUser = $request->temp_user;
+        $token = PersonalAccessToken::findToken($request->token);
+        if($token){
+            $user = $token->tokenable;
+            if(!$user) $user = null;
+        }
+
+        if($user != null) {
+            $user_id = $user->id;
+            if($tempUser != null && $tempUser != "null") {
+                Cart::where('temp_user_id', $tempUser)
                         ->update(
                         [
                             'user_id' => $user_id,
                             'temp_user_id' => null,
                         ]
                 );
-                Session::forget('temp_user_id');
             }
             $carts = Cart::where('user_id', $user_id)->get();
         } else {
-            $temp_user_id = $request->session()->get('temp_user_id');
+            $temp_user_id = $tempUser;
             // $carts = Cart::where('temp_user_id', $temp_user_id)->get();
             $carts = ($temp_user_id != null) ? Cart::where('temp_user_id', $temp_user_id)->get() : [] ;
         }
 
-        return view('frontend.view_cart', compact('carts'));
+        $total =0;
+        foreach ($carts as $key => $cartItem){
+                                        
+            $product = \App\Models\Product::find($cartItem['product_id']);
+            $product_stock = $product->stocks->where('variant', $cartItem['variation'])->first();
+            // $total = $total + ($cartItem['price'] + $cartItem['tax']) * $cartItem['quantity'];
+            $total = $total + cart_product_price($cartItem, $product, false) * $cartItem['quantity'];
+            $product_name_with_choice = $product->getTranslation('name');
+            if ($cartItem['variation'] != null) {
+                $product_name_with_choice = $product->getTranslation('name') . ' - ' . $cartItem['variation'];
+            }
+            $carts[$key]->productData = new ProductCollection([$product]);
+            $carts[$key]->cartItem = $cartItem;
+            $carts[$key]->product_name_with_choice = $product_name_with_choice;
+            $carts[$key]->cart_product_price = cart_product_price($cartItem, $product, true, false);
+            $carts[$key]->cart_product_tax = cart_product_tax($cartItem, $product);
+            $carts[$key]->single_price = single_price(cart_product_price($cartItem, $product, false) * $cartItem['quantity']);
+            $carts[$key]->
+            $carts[$key]->
+            $carts[$key]->
+        }
+                                       
+
+        //return view('frontend.view_cart', compact('carts'));
     }
 
     public function showCartModal(Request $request)
