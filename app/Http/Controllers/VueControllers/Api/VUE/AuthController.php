@@ -117,13 +117,14 @@ class AuthController extends Controller
     }
 
     public function login(Request $request)
-    { 
+    {
         // return 5/0;
         /*$request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
             'remember_me' => 'boolean'
         ]);*/
+
 
         $delivery_boy_condition = $request->has('user_type') && $request->user_type == 'delivery_boy';
         $seller_condition = $request->has('user_type') && $request->user_type == 'seller';
@@ -139,8 +140,7 @@ class AuthController extends Controller
                 ->orWhere('phone', $request->email)
                 ->first();
         } else {
-            $user = User::whereIn('user_type', ['customer'])
-                ->where('email', $request->email)
+            $user = User::where('email', $request->email)
                 ->orWhere('phone', $request->email)
                 ->first();
         }

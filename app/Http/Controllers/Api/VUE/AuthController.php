@@ -117,9 +117,12 @@ class AuthController extends Controller
             ], 200);
         }
     }
-
+    public function ee(Request $request){
+        return "hjsdfsd";
+    }
     public function login(Request $request)
     {
+
         /*$request->validate([
             'email' => 'required|string|email',
             'password' => 'required|string',
