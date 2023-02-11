@@ -17,6 +17,8 @@ use App\Http\Controllers\VueControllers\Api\VUE\HomeController;
 use App\Http\Controllers\VueControllers\Api\VUE\SearchController;
 use App\Http\Controllers\VueControllers\Api\VUE\AuctionProductController;
 use App\Http\Controllers\VueControllers\Api\VUE\AuctionProductBidController;
+use App\Http\Controllers\VueControllers\SellerInformationController;
+
 //Some important Routes
 // Route::get('get-pages',)
 Route::get('get-important-pages','App\Http\Controllers\VueControllers\Api\VUE\SomeImportantInfoController@getImportantPages');
@@ -31,6 +33,9 @@ Route::get('/flash-deal-product','App\Http\Controllers\VueControllers\Api\VUE\So
 //Data for dahsboard
 
 Route::get('data-userdashboard','App\Http\Controllers\VueControllers\Api\VUE\SomeImportantInfoController@getDataForUserDashboard');
+
+//data for seller dashbaord
+Route::get('get-dashboard-data',[SellerInformationController::class,'dashboard']);
 
 Route::controller(SearchController::class)->group(function () {
     Route::get('/search', 'index')->name('search');
