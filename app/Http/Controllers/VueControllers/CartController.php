@@ -18,30 +18,57 @@ class CartController extends Controller
 {
     public function index(Request $request)
     {
-        if(auth()->user() != null) {
-            $user_id = Auth::user()->id;
-            if($request->session()->get('temp_user_id')) {
-                Cart::where('temp_user_id', $request->session()->get('temp_user_id'))
+
+        $user = null;
+        $tempUser = $request->temp_user;
+        $token = PersonalAccessToken::findToken($request->token);
+        if($token){
+            $user = $token->tokenable;
+            if(!$user) $user = null;
+        }
+
+        $carts = [];
+        if($user != null) {
+            $user_id = $user->id;
+            if($tempUser) {
+                Cart::where('temp_user_id', $tempUser)
                         ->update(
                         [
                             'user_id' => $user_id,
                             'temp_user_id' => null,
                         ]
                 );
-                Session::forget('temp_user_id');
             }
             $carts = Cart::where('user_id', $user_id)->get();
         } else {
-            $temp_user_id = $request->session()->get('temp_user_id');
+            $temp_user_id = $tempUser;
             // $carts = Cart::where('temp_user_id', $temp_user_id)->get();
             $carts = ($temp_user_id != null) ? Cart::where('temp_user_id', $temp_user_id)->get() : [] ;
         }
 
-        return view('frontend.view_cart', compact('carts'));
+        $total = 0;
+        foreach ($carts as $key => $cartItem){
+            // $carts[$key]->test = "test";
+            $product = \App\Models\Product::find($cartItem['product_id']);
+            $product_stock = $product->stocks->where('variant', $cartItem['variation'])->first();
+            $total = $total + cart_product_price($cartItem, $product, false) * $cartItem['quantity'];
+            $product_name_with_choice = $product->getTranslation('name');
+            if ($cartItem['variation'] != null) {
+                $product_name_with_choice = $product->getTranslation('name') . ' - ' . $cartItem['variation'];
+            }
+            $carts[$key]->productData = new ProductCollection([$product]);
+            $carts[$key]->product_name_with_choice = $product_name_with_choice;
+            $carts[$key]->cart_product_price = cart_product_price($cartItem, $product, true, false);
+            $carts[$key]->cart_product_tax = cart_product_tax($cartItem, $product);
+            $carts[$key]->single_price = single_price(cart_product_price($cartItem, $product, false) * $cartItem['quantity']);
+            $carts[$key]->product_stock = $product_stock->qty;
+        }
+       $total = single_price($total);
+        return response()->json(["carts" => $carts,"total" => $total]);
     }
 
     public function showCartModal(Request $request)
-    { 
+    {
 
         $product = Product::find($request->id);
 
@@ -49,7 +76,7 @@ class CartController extends Controller
         // $product->home_price = home_price($product);
         // $product->home_discounted_price = home_discounted_price($product);
 
-        
+
         $product->addon_is_activated = addon_is_activated('club_point');
 
         $qty = 0;
@@ -76,7 +103,7 @@ class CartController extends Controller
     }
 
     public function addToCart(Request $request)
-    { 
+    {
 
 
         $user = null;
@@ -86,8 +113,8 @@ class CartController extends Controller
             $user = $token->tokenable;
             if(!$user) $user = null;
         }
-       
-        
+
+
 
         $product = Product::find($request->id);
         $carts = array();
@@ -279,7 +306,7 @@ class CartController extends Controller
                 $carts = Cart::where('temp_user_id', $temp_user_id)->get();
             }
 
-            
+
             $addon_is_activated = addon_is_activated('club_point');
             $reletedProducts = filter_products(\App\Models\Product::where('category_id', $product->category_id)->where('id', '!=', $product->id))->limit(2)->get();
             $reletedProducts = new ProductCollection($reletedProducts);
@@ -366,8 +393,17 @@ class CartController extends Controller
     //updated the quantity for a cart item
     public function updateQuantity(Request $request)
     {
-        $cartItem = Cart::findOrFail($request->id);
 
+        $user = null;
+        $tempUser = $request->temp_user;
+        $token = PersonalAccessToken::findToken($request->token);
+        if($token){
+            $user = $token->tokenable;
+            if(!$user) $user = null;
+        }
+
+        $cartItem = Cart::findOrFail($request->id);
+        $price = $cartItem['price'];
         if($cartItem['id'] == $request->id){
             $product = Product::find($cartItem['product_id']);
             $product_stock = $product->stocks->where('variant', $cartItem['variation'])->first();
@@ -411,18 +447,23 @@ class CartController extends Controller
             $cartItem->save();
         }
 
-        if(auth()->user() != null) {
-            $user_id = Auth::user()->id;
-            $carts = Cart::where('user_id', $user_id)->get();
-        } else {
-            $temp_user_id = $request->session()->get('temp_user_id');
-            $carts = Cart::where('temp_user_id', $temp_user_id)->get();
-        }
+        return $price;
 
-        return array(
-            'cart_count' => count($carts),
-            'cart_view' => view('frontend.partials.cart_details', compact('carts'))->render(),
-            'nav_cart_view' => view('frontend.partials.cart')->render(),
-        );
+        // if($user != null) {
+        //     $user_id = $user->id;
+        //     $carts = Cart::where('user_id', $user_id)->get();
+        // } else {
+        //     $temp_user_id = $tempUser;
+        //     $carts = Cart::where('temp_user_id', $temp_user_id)->get();
+        // }
+
+
+
+        // return 'okkk';
+        // return array(
+        //     'cart_count' => count($carts),
+        //     'cart_view' => view('frontend.partials.cart_details', compact('carts'))->render(),
+        //     'nav_cart_view' => view('frontend.partials.cart')->render(),
+        // );
     }
 }

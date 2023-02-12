@@ -19,6 +19,8 @@ class ProductCollection extends ResourceCollection
                     'id' => $data->id,
                     'name' => $data->getTranslation('name'),
                     'digital'=>$data->digital,
+                    'auction_product' => $data->auction_product,
+                    'min_qty' => $data->min_qty,
                     'slug' => $data->slug,
                     'photos' => $photoLink,
                     'thumbnail_image' => uploaded_asset($data->thumbnail_img),
