@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers\VueControllers;
 
+use Carbon\Carbon;
+use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Laravel\Sanctum\PersonalAccessToken;
+use App\Http\Resources\VUE\ProductMiniCollection;
 
 class SellerInformationController extends Controller
 {
-    public function dashboard(Request $request){
+    public function sideNav(Request $request){
 
         $token =$request->token;
 
@@ -65,8 +69,7 @@ class SellerInformationController extends Controller
         ->where('user_id', $user->id)
         ->count();
 
-        $product = \App\Models\Product::where('user_id', $user->id)->count();
-        $rating =$user->shop->rating;
+
 
         return response()->json([
            'shop'=> $shop,
@@ -83,9 +86,84 @@ class SellerInformationController extends Controller
            'refund_request'=>$refund_request,
            'product_query_activation'=>$product_query_activation,
            'support_ticket'=>$support_ticket,
-           'product'=>$product,
 
         ]);
+
+    }
+
+    public function dashboard(Request $request){
+        $token =$request->token;
+
+        $token = PersonalAccessToken::findToken($token);
+        if(!$token) return response()->json(["Unauthorized"], 401);
+        $user = $token->tokenable;
+        if(!$user) return response()->json(["Unauthorized"], 401);
+
+
+        $product = \App\Models\Product::where('user_id', $user->id)->count();
+        $rating =$user->shop->rating;
+        $total_order = \App\Models\Order::where('seller_id', $user->id)->where('delivery_status', 'delivered')->count();
+
+        $orderDetails = \App\Models\OrderDetail::where('seller_id', $user->id)->get();
+        $total = 0;
+        foreach ($orderDetails as $key => $orderDetail) {
+            if ($orderDetail->order != null && $orderDetail->order->payment_status == 'paid') {
+                $total += $orderDetail->price;
+            }
+        }
+
+        $date = date('Y-m-d');
+        $days_ago_30 = date('Y-m-d', strtotime('-30 days', strtotime($date)));
+        $days_ago_60 = date('Y-m-d', strtotime('-60 days', strtotime($date)));
+
+        $orderTotalCurrentMonth = \App\Models\Order::where('seller_id',$user->id)
+            ->where('payment_status', 'paid')
+            ->where('created_at', '>=', $days_ago_30)
+            ->sum('grand_total');
+
+        $orderTotalLastMonth = \App\Models\Order::where('seller_id', $user->id)
+        ->where('payment_status', 'paid')
+        ->where('created_at', '>=', $days_ago_60)
+        ->where('created_at', '<=', $days_ago_30)
+        ->sum('grand_total');
+
+        $new_order = \App\Models\OrderDetail::where('seller_id', $user->id)->where('delivery_status', 'pending')->count();
+
+        $cancelled_order = \App\Models\OrderDetail::where('seller_id',  $user->id)->where('delivery_status', 'cancelled')->count();
+        $onDelivery = \App\Models\OrderDetail::where('seller_id', $user->id)->where('delivery_status', 'on_the_way')->count();
+        $delivered = \App\Models\OrderDetail::where('seller_id', $user->id)->where('delivery_status', 'delivered')->count();
+        $seller_subscription = addon_is_activated('seller_subscription');
+        $sellerPackageDetails = $user->shop->seller_package;
+        $seller_package_logo = uploaded_asset($user->shop->seller_package->logo);
+        $shop = $user->shop;
+
+        $data['products'] = filter_products(Product::where('user_id', $user->id)->orderBy('num_of_sale', 'desc'))->limit(12)->get();
+        $data['last_7_days_sales'] = Order::where('created_at', '>=', Carbon::now()->subDays(7))
+                                ->where('seller_id', '=', $user->id)
+                                ->where('delivery_status', '=', 'delivered')
+                                ->select(DB::raw("sum(grand_total) as total, DATE_FORMAT(created_at, '%d %b') as date"))
+                                ->groupBy(DB::raw("DATE_FORMAT(created_at, '%Y-%m-%d')"))
+                                ->get()->pluck('total', 'date');
+
+
+        $data['products'] =  new ProductMiniCollection($data['products']);
+        return response()->json([
+            'product'=>$product,
+            'rating'=>$rating,
+            'total_order'=>$total_order,
+            'total_sales'=>$total,
+            'orderTotalCurrentMonth'=>$orderTotalCurrentMonth,
+            'orderTotalLastMonth'=>$orderTotalLastMonth,
+            'new_order'=>$new_order,
+            'cancelled_order'=>$cancelled_order,
+            'onDelivery'=>$onDelivery,
+            'delivered'=>$delivered,
+            'seller_subscription'=>$seller_subscription,
+            'sellerPackageDetails'=>$sellerPackageDetails,
+            'seller_package_logo'=>$seller_package_logo,
+            'shop'=>$shop,
+            'data'=>$data
+         ]);
 
     }
 }

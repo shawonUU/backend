@@ -32,7 +32,7 @@ class ProductCollection extends ResourceCollection
                     'featured' => $data->seller_featured == 0 ? false : true,
                 ];
             }),
-            
+
         ];
     }
 }

@@ -35,6 +35,7 @@ Route::get('/flash-deal-product','App\Http\Controllers\VueControllers\Api\VUE\So
 Route::get('data-userdashboard','App\Http\Controllers\VueControllers\Api\VUE\SomeImportantInfoController@getDataForUserDashboard');
 
 //data for seller dashbaord
+Route::get('get-sidenav-data',[SellerInformationController::class,'sideNav']);
 Route::get('get-dashboard-data',[SellerInformationController::class,'dashboard']);
 
 Route::controller(SearchController::class)->group(function () {
