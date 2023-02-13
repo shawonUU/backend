@@ -374,20 +374,21 @@ class CartController extends Controller
     //removes from Cart
     public function removeFromCart(Request $request)
     {
+        // return $request->id;
         Cart::destroy($request->id);
-        if(auth()->user() != null) {
-            $user_id = Auth::user()->id;
-            $carts = Cart::where('user_id', $user_id)->get();
-        } else {
-            $temp_user_id = $request->session()->get('temp_user_id');
-            $carts = Cart::where('temp_user_id', $temp_user_id)->get();
-        }
+        // if(auth()->user() != null) {
+        //     $user_id = Auth::user()->id;
+        //     $carts = Cart::where('user_id', $user_id)->get();
+        // } else {
+        //     $temp_user_id = $request->session()->get('temp_user_id');
+        //     $carts = Cart::where('temp_user_id', $temp_user_id)->get();
+        // }
 
-        return array(
-            'cart_count' => count($carts),
-            'cart_view' => view('frontend.partials.cart_details', compact('carts'))->render(),
-            'nav_cart_view' => view('frontend.partials.cart')->render(),
-        );
+        // return array(
+        //     'cart_count' => count($carts),
+        //     'cart_view' => view('frontend.partials.cart_details', compact('carts'))->render(),
+        //     'nav_cart_view' => view('frontend.partials.cart')->render(),
+        // );
     }
 
     //updated the quantity for a cart item

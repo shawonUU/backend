@@ -240,7 +240,7 @@ Route::controller(CartController::class)->group(function () {
     Route::get('/cart', 'index')->name('cart');
     Route::get('/cart/show-cart-modal', 'showCartModal')->name('cart.showCartModal');
     Route::get('/cart/addtocart', 'addToCart')->name('cart.addToCart');
-    Route::post('/cart/removeFromCart', 'removeFromCart')->name('cart.removeFromCart');
+    Route::get('/cart/removeFromCart', 'removeFromCart')->name('cart.removeFromCart');
     Route::get('/cart/updateQuantity', 'updateQuantity')->name('cart.updateQuantity');
 });
 
