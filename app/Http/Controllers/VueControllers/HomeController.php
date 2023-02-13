@@ -503,11 +503,15 @@ class HomeController extends Controller
             $product_queries ="";
          }
 
-         foreach( $product_queries as $key => $query ){
+       if($product_queries){
+          foreach( $product_queries as $key => $query ){
             $query->user_name = $query->user->name;
             $query->seller_name =$query->product->user->name;
             $product_queries[$key]=$query;
          }
+       }else{
+         $product_queries ="";
+       }
          return response()->json([$products,$shop_details,$relatedProducts,$topSellingProduct,$vendorActivation,$coversationSystem,$club_point,$affiliteCheck,$referral_code_url,$refund_check,$refund_sticker_image,$product_query_activation,$total_query,$product_queries,$own_product_queries]);
 
 
