@@ -2,24 +2,26 @@
 
 namespace App\Http\Controllers\VueControllers\Seller;
 
-use App\Http\Requests\ProductRequest;
+use Str;
+use Auth;
+use Artisan;
+use Combinations;
+use Carbon\Carbon;
+use App\Models\Cart;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\ProductTax;
 use Illuminate\Http\Request;
 use App\Models\AttributeValue;
-use App\Models\Cart;
-use App\Models\Category;
-use App\Models\Product;
-use App\Models\ProductTax;
-use App\Models\ProductTranslation;
-use Carbon\Carbon;
-use Combinations;
-use Artisan;
-use Auth;
-use Str;
-
 use App\Services\ProductService;
+use App\Models\ProductTranslation;
+
 use App\Services\ProductTaxService;
-use App\Services\ProductFlashDealService;
+use App\Http\Requests\ProductRequest;
 use App\Services\ProductStockService;
+use Laravel\Sanctum\PersonalAccessToken;
+use App\Services\ProductFlashDealService;
+use App\Http\Resources\VUE\ProductCollection;
 
 class ProductController extends Controller
 {
@@ -42,13 +44,34 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
+
+        $token =$request->token;
+
+        $token = PersonalAccessToken::findToken($token);
+        if(!$token) return response()->json(["Unauthorized"], 401);
+        $user = $token->tokenable;
+        if(!$user) return response()->json(["Unauthorized"], 401);
+
         $search = null;
-        $products = Product::where('user_id', Auth::user()->id)->where('digital', 0)->orderBy('created_at', 'desc');
+        $products = Product::where('user_id', $user->id)->where('digital', 0)->orderBy('created_at', 'desc');
         if ($request->has('search')) {
             $search = $request->search;
             $products = $products->where('name', 'like', '%' . $search . '%');
         }
-        $products = $products->paginate(10);
+        $products = new ProductCollection($products->paginate(10)) ;
+        $seller_subscription = addon_is_activated('seller_subscription');
+        $remaining_uploads =  max(0, $user->shop->product_upload_limit -  $user->products()->count());
+        $seller_package = \App\Models\SellerPackage::find($user->shop->seller_package_id);
+        $seller_logo = uploaded_asset($seller_package->logo);
+        return response()->json(
+            [
+            "products"=>$products,
+            'seller_subscription'=>$seller_subscription,
+            'remaining_uploads'=>$remaining_uploads,
+            'seller_package' =>$seller_package,
+            'seller_logo'=>$seller_logo,
+             ]
+        );
         return view('seller.product.products.index', compact('products', 'search'));
     }
 
