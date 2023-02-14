@@ -15,6 +15,7 @@ class ProductCollection extends ResourceCollection
                 foreach($photos as $photo){
                     $photoLink[] = uploaded_asset($photo);
                 }
+
                 return [
                     'id' => $data->id,
                     'name' => $data->getTranslation('name'),

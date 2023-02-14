@@ -44,14 +44,7 @@ class ProductController extends Controller
 
     public function index(Request $request)
     {
-
-        $token =$request->token;
-
-        $token = PersonalAccessToken::findToken($token);
-        if(!$token) return response()->json(["Unauthorized"], 401);
-        $user = $token->tokenable;
-        if(!$user) return response()->json(["Unauthorized"], 401);
-
+        $user = Auth::user();
         $search = null;
         $products = Product::where('user_id', $user->id)->where('digital', 0)->orderBy('created_at', 'desc');
         if ($request->has('search')) {
@@ -63,6 +56,7 @@ class ProductController extends Controller
         $remaining_uploads =  max(0, $user->shop->product_upload_limit -  $user->products()->count());
         $seller_package = \App\Models\SellerPackage::find($user->shop->seller_package_id);
         $seller_logo = uploaded_asset($seller_package->logo);
+        $product_approve_by_admin = get_setting('product_approve_by_admin');
         return response()->json(
             [
             "products"=>$products,
@@ -70,6 +64,7 @@ class ProductController extends Controller
             'remaining_uploads'=>$remaining_uploads,
             'seller_package' =>$seller_package,
             'seller_logo'=>$seller_logo,
+            'product_approve_by_admin'=>$product_approve_by_admin
              ]
         );
         return view('seller.product.products.index', compact('products', 'search'));

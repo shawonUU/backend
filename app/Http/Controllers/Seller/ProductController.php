@@ -86,7 +86,7 @@ class ProductController extends Controller
             '_token', 'sku', 'choice', 'tax_id', 'tax', 'tax_type', 'flash_deal_id', 'flash_discount', 'flash_discount_type'
         ]));
         $request->merge(['product_id' => $product->id]);
-        
+
         //VAT & Tax
         if($request->tax_id) {
             $this->productTaxService->store($request->only([
@@ -333,7 +333,7 @@ class ProductController extends Controller
             return back();
         }
     }
-    
+
       public function productstore(Request $request){
         $product= new Product;
         $product->name = $request->name ;
@@ -354,6 +354,6 @@ class ProductController extends Controller
             $product->colors = json_encode($colors);
         }
         $product->save();
-        
+
     }
 }
