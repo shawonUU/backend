@@ -72,23 +72,44 @@ class ProductController extends Controller
 
     public function create(Request $request)
     {
+        $brands = \App\Models\Brand::select('id','slug','name as text')->get();
+        $pos_system = addon_is_activated('pos_system');
+        $refund_request = addon_is_activated('refund_request');
         if (addon_is_activated('seller_subscription')) {
             if (seller_package_validity_check()) {
                 $categories = Category::where('parent_id', 0)
                     ->where('digital', 0)
+                    ->select('categories.name as text','categories.id')
                     ->with('childrenCategories')
                     ->get();
-                return view('seller.product.products.create', compact('categories'));
+                    return response()->json(
+                        [
+                        "categories"=>$categories,
+                        'brands'=>$brands,
+                        'pos_system'=>$pos_system,
+                        'refund_request'=>$refund_request
+                         ]
+                    );
             } else {
                 flash(translate('Please upgrade your package.'))->warning();
                 return back();
             }
         }
-        $categories = Category::where('parent_id', 0)
+         $categories = Category::where('parent_id', 0)
             ->where('digital', 0)
+            // ->select('categories.name as text')
             ->with('childrenCategories')
             ->get();
-        return view('seller.product.products.create', compact('categories'));
+
+            return response()->json(
+                [
+                "categories"=>$categories,
+                "brands"=>$brands,
+                'pos_system'=>$pos_system,
+                'refund_request'=>$refund_request
+                 ]
+            );
+        // return view('seller.product.products.create', compact('categories'));
     }
 
     public function store(ProductRequest $request)
