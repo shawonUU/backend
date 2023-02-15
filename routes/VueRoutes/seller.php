@@ -14,9 +14,11 @@ Route::group(['prefix' => 'seller', 'middleware' => ['seller', 'verified', 'user
 
 Route::group(['namespace' => 'App\Http\Controllers\VueControllers\Seller'], function () {
     Route::controller(ProductController::class)->group(function () {
-        Route::get('/products/storeapiseller', 'store')->name('products.storeapi');});});
+        Route::get('/products/storeapiseller', 'store')->name('products.storeapi');
+    });
+});
 
-Route::group(['namespace' => 'App\Http\Controllers\VueControllers\Seller', 'prefix' => 'seller', 'middleware' => ['seller', 'verified', 'user'], 'as' => 'seller.'], function () {
+Route::group(['namespace' => 'App\Http\Controllers\VueControllers\Seller', 'prefix' => 'seller', 'middleware' => ['auth:sanctum', 'seller', 'verified', 'user'], 'as' => 'seller.'], function () {
     Route::controller(DashboardController::class)->group(function () {
         Route::get('/dashboard', 'index')->name('dashboard');
     });
