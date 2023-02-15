@@ -17,7 +17,7 @@ class AddressCollection extends ResourceCollection
 
                 if($data->latitude || $data->longitude) {
                     $location_available = true;
-                    $lat = floatval($data->latitude) ;
+                    $lat = floatval($data->latitude);
                     $lang = floatval($data->longitude);
                 }
 

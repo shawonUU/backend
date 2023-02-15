@@ -18,6 +18,8 @@ use App\Utility\NotificationUtility;
 use Session;
 use Auth;
 
+use App\Http\Resources\VUE\AddressCollection;
+
 class CheckoutController extends Controller
 {
 
@@ -100,14 +102,19 @@ class CheckoutController extends Controller
 
     public function get_shipping_info(Request $request)
     {
-        $carts = Cart::where('user_id', Auth::user()->id)->get();
-//        if (Session::has('cart') && count(Session::get('cart')) > 0) {
-        if ($carts && count($carts) > 0) {
-            $categories = Category::all();
-            return view('frontend.shipping_info', compact('categories', 'carts'));
-        }
-        flash(translate('Your cart is empty'))->success();
-        return back();
+        // $carts = Cart::where('user_id', Auth::user()->id)->get();
+
+        // if ($carts && count($carts) > 0) {
+        //     $categories = Category::all();
+
+           
+        //     // return view('frontend.shipping_info', compact('categories', 'carts'));
+        // }
+        // flash(translate('Your cart is empty'))->success();
+        // return back();
+
+
+        return $addresses = new AddressCollection(Auth::user()->addresses);
     }
 
     public function store_shipping_info(Request $request)
