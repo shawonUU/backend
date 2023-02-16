@@ -76,6 +76,9 @@ class ProductController extends Controller
         $pos_system = addon_is_activated('pos_system');
         $refund_request = addon_is_activated('refund_request');
         $shipping_type = get_setting('shipping_type');
+        $cash_payment = get_setting('cash_payment');
+        $colors = \App\Models\Color::orderBy('name', 'asc')->get();
+        $attribute = \App\Models\Attribute::all();
         if (addon_is_activated('seller_subscription')) {
             if (seller_package_validity_check()) {
                 $categories = Category::where('parent_id', 0)
@@ -89,7 +92,10 @@ class ProductController extends Controller
                         'brands'=>$brands,
                         'pos_system'=>$pos_system,
                         'refund_request'=>$refund_request,
-                        'shipping_type'=>$shipping_type
+                        'shipping_type'=>$shipping_type,
+                        'cash_payment'=>$cash_payment,
+                        'color'=>$colors,
+                        'attribute'=>$attribute
                          ]
                     );
             } else {
@@ -108,7 +114,11 @@ class ProductController extends Controller
                 "categories"=>$categories,
                 "brands"=>$brands,
                 'pos_system'=>$pos_system,
-                'refund_request'=>$refund_request
+                'refund_request'=>$refund_request,
+                'shipping_type'=>$shipping_type,
+                'cash_payment'=>$cash_payment,
+                'color'=>$colors,
+                'attributes'=>$attribute
                  ]
             );
         // return view('seller.product.products.create', compact('categories'));
