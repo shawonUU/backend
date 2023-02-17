@@ -71,7 +71,7 @@ class ProductController extends Controller
     public function duplicate($id)
     {
         $product = Product::findOrFail($id);
-        
+
         if (auth()->user()->id != $product->user_id) {
             return $this->failed(translate('This product is not yours'));
         }
@@ -127,18 +127,18 @@ class ProductController extends Controller
             ->select('reviews.id','reviews.rating','reviews.comment','reviews.status','reviews.updated_at','products.name as product_name','users.id as user_id','users.name','users.avatar')
             ->distinct()
             ->paginate(1);
-        
+
        return new ProductReviewCollection($reviews);
     }
 
     public function remainingUploads(){
-        
+
         $remaining_uploads=(max(0, auth()->user()->shop->product_upload_limit - auth()->user()->products()->count()) );
         return response()->json([
             'ramaining_product'=> $remaining_uploads,
         ]);
     }
-    
+
        public function productstore(Request $request){
         $product= new Product;
         $product->name = $request->name;
@@ -155,12 +155,12 @@ class ProductController extends Controller
          $product->cash_on_delivery=1;
          $product->low_stock_quantity=1;
          $product->discount_type='ammount';
- 
-         
-        
-        
+
+
+
+
         $product->added_by='seller';
-        
+
         $product->user_id=  $request->seller_id;
         $product->slug = preg_replace('/[^A-Za-z0-9\-]/', '', str_replace(' ', '-', strtolower($request->name))).'-'.Str::random(5);
          if($request->has('colors_active') && $request->has('colors') && count($request->colors) > 0){
@@ -171,36 +171,36 @@ class ProductController extends Controller
             $product->colors = json_encode($colors);
         }
        $product1= $product->save();
-       
-       
-       
+
+
+
        $product_stock= new ProductStock;
        $product_stock->product_id= $product->id;
        $product_stock->price= $request->unit_price;
        $product_stock->qty= $request->current_stock;
        $product_stock->variant= '';
        $product_stock->sku= '';
-       
+
        $product_stock->save();
-       
+
         // return $product1->id;
-        
-        
+
+
         //   $product = $this->productService->store($request->except([
         //     '_token', 'sku', 'choice', 'tax_id', 'tax', 'tax_type', 'flash_deal_id', 'flash_discount', 'flash_discount_type'
         // ]));
         // $request->merge(['product_id' => $product->id]);
-        
-        
-        
+
+
+
         return response()->json([
             'result' => true,
             'message' => 'successfully saved'
- 
+
         ]);
-        
+
     }
-    public function productupdate(Request $request,$id){ 
+    public function productupdate(Request $request,$id){
          $product = Product::findOrFail($id);
         $product->name = $request->name;
         if($request->category_id!="null"){
@@ -209,8 +209,8 @@ class ProductController extends Controller
         $product->unit = $request->unit ;
         $product->unit_price = $request->unit_price ;
         $product->current_stock = $request->current_stock ;
-      
-        
+
+
          if($request->has('colors_active') && $request->has('colors') && count($request->colors) > 0){
             $product->colors = json_encode($request->colors);
         }
@@ -222,20 +222,20 @@ class ProductController extends Controller
         return response()->json([
             'result' => true,
             'message' => 'successfully saved'
- 
+
         ]);
-     
+
     }
-    
-    
-   public function seller_product_details($id){ 
+
+
+   public function seller_product_details($id){
         //  $product=Product::where('id', $id)->first();
-   
+
         return new SellerProductDetailsCollection(Product::where('id', $id)->get());
-     
+
     }
-    
- 
-    
+
+
+
 
 }

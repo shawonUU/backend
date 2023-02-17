@@ -23,7 +23,7 @@ class ReviewController extends Controller
             $review->viewed = 1;
             $review->save();
         }
-
+        return $reviews;
         return view('seller.reviews', compact('reviews'));
     }
 
