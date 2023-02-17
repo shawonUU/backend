@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\VueControllers\Seller;
 
-use Illuminate\Http\Request;
-use App\Models\Conversation;
-use App\Models\BusinessSetting;
-use App\Models\Message;
-use App\Models\ProductQuery;
 use Auth;
+use App\Models\User;
+use App\Models\Message;
+use App\Models\Conversation;
+use App\Models\ProductQuery;
+use Illuminate\Http\Request;
+use App\Models\BusinessSetting;
 
 class ConversationController extends Controller
 {
@@ -19,8 +20,20 @@ class ConversationController extends Controller
     public function index()
     {
         if (BusinessSetting::where('type', 'conversation_system')->first()->value == 1) {
-            $conversations = Conversation::where('sender_id', Auth::user()->id)->orWhere('receiver_id', Auth::user()->id)->orderBy('created_at', 'desc')->paginate(5);
-            return view('seller.conversations.index', compact('conversations'));
+           $conversations = Conversation::where('sender_id', Auth::user()->id)->orWhere('receiver_id', Auth::user()->id)->orderBy('created_at', 'desc')->paginate(5);
+           $totalConversation = Conversation::where('sender_id', Auth::user()->id)->orWhere('receiver_id', Auth::user()->id)->orderBy('created_at', 'desc')->count();
+           foreach($conversations as $key=>$conversation){
+                $conversation->sender = $conversation->sender;
+                $conversation->sender_avatar_original = uploaded_asset($conversation->sender->avatar_original);
+                $conversation->receiver = $conversation->receiver;
+                $conversation->receiver_avatar_original = uploaded_asset($conversation->receiver->avatar_original);
+                $conversation->created_time = date('h:i:m d-m-Y', strtotime($conversation->messages->last()->created_at));
+                $conversation->last_message = $conversation->messages->last()->message;
+           }
+           return response()->json([
+            'conversations'=>$conversations,
+            'totalConversation'=>$totalConversation
+           ]);
         } else {
             flash(translate('Conversation is disabled at this moment'))->warning();
             return back();

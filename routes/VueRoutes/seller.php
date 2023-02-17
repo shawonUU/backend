@@ -130,7 +130,12 @@ Route::group(['namespace' => 'App\Http\Controllers\VueControllers\Seller', 'pref
         Route::post('conversations/refresh', 'refresh')->name('conversations.refresh');
         Route::post('conversations/message/store', 'message_store')->name('conversations.message_store');
     });
+    //Jobs
+    // Route::resource('job',jobController::class);
+    Route::controller(jobController::class)->group(function () {
+        Route::get('/jobs', 'index')->name('jobs.index');
 
+    });
     // product query (comments) show on seller panel
     Route::controller(ProductQueryController::class)->group(function () {
         Route::get('/product-queries', 'index')->name('product_query.index');
