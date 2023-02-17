@@ -55,7 +55,7 @@ class AddressController extends Controller
         $address->phone         = $request->phone;
         $address->save();
 
-        return back();
+        return "success";
     }
 
     /**
@@ -130,25 +130,27 @@ class AddressController extends Controller
     }
 
     public function getStates(Request $request) {
-        $states = State::where('status', 1)->where('country_id', $request->country_id)->get();
-        $html = '<option value="">'.translate("Select State").'</option>';
+        return $states = State::where('status', 1)->where('country_id', $request->country_id)->get();
+        // $html = '<option value="">'.translate("Select State").'</option>';
 
-        foreach ($states as $state) {
-            $html .= '<option value="' . $state->id . '">' . $state->name . '</option>';
-        }
+        // foreach ($states as $state) {
+        //     $html .= '<option value="' . $state->id . '">' . $state->name . '</option>';
+        // }
 
-        echo json_encode($html);
+        // echo json_encode($html);
     }
+   
 
     public function getCities(Request $request) {
-        $cities = City::where('status', 1)->where('state_id', $request->state_id)->get();
-        $html = '<option value="">'.translate("Select City").'</option>';
+        return $cities = City::where('status', 1)->where('state_id', $request->state_id)->get();
+        // $html = '<option value="">'.translate("Select City").'</option>';
 
-        foreach ($cities as $row) {
-            $html .= '<option value="' . $row->id . '">' . $row->getTranslation('name') . '</option>';
-        }
+        // foreach ($cities as $row) {
+        //     $html .= '<option value="' . $row->id . '">' . $row->getTranslation('name') . '</option>';
+        // }
 
-        echo json_encode($html);
+        // echo json_encode($html);
+        
     }
 
     public function set_default($id){
