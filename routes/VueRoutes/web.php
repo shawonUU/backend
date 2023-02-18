@@ -330,6 +330,10 @@ Route::group(['middleware' => ['auth:sanctum','customer', 'verified', 'unbanned'
             //Club point
             Route::post('/apply-club-point', 'apply_club_point')->name('checkout.apply_club_point');
             Route::post('/remove-club-point', 'remove_club_point')->name('checkout.remove_club_point');
+
+            // meee
+            Route::get('/get/address-info', 'getAddressInfo')->name('get-address-info');
+
         });
     });
 
@@ -405,9 +409,10 @@ Route::group(['middleware' => ['auth:sanctum']], function() {
     //Address
     Route::resource('addresses', AddressController::class);
     Route::controller(AddressController::class)->group(function () {
-        Route::post('/get-states', 'getStates')->name('get-state');
-        Route::post('/get-cities', 'getCities')->name('get-city');
-        Route::post('/addresses/update/{id}', 'update')->name('addresses.update');
+        Route::get('/address-store', 'store')->name('address-store');
+        Route::get('/get-states', 'getStates')->name('get-state');
+        Route::get('/get-cities', 'getCities')->name('get-city');
+        Route::get('/addresses/update/{id}', 'update')->name('addresses.update');
         Route::get('/addresses/destroy/{id}', 'destroy')->name('addresses.destroy');
         Route::get('/addresses/set_default/{id}', 'set_default')->name('addresses.set_default');
     });

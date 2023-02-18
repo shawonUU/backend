@@ -117,17 +117,25 @@ class CheckoutController extends Controller
         return $addresses = new AddressCollection(Auth::user()->addresses);
     }
 
+    public function getAddressInfo(){
+        
+        $country = \App\Models\Country::where('status', 1)->get();
+
+        return $country;
+    }
+
     public function store_shipping_info(Request $request)
     {
+        $worning = null;
+
         if ($request->address_id == null) {
-            flash(translate("Please add shipping address"))->warning();
-            return back();
+            // flash(translate("Please add shipping address"))->warning();
+            $worning = "Please add shipping address";
         }
 
         $carts = Cart::where('user_id', Auth::user()->id)->get();
         if($carts->isEmpty()) {
-            flash(translate('Your cart is empty'))->warning();
-            return redirect()->route('home');
+            $worning = "Your cart is empty";
         }
 
         foreach ($carts as $key => $cartItem) {
@@ -146,8 +154,8 @@ class CheckoutController extends Controller
             })->orWhere('free_shipping', 1);
             $carrier_list = $carrier_query->get();
         }
-
-        return view('frontend.delivery_info', compact('carts','carrier_list'));
+        return response()->json(["worning" => $worning, 'carts' => $carts, 'carrier_list' => $carrier_list], 200);
+        // return view('frontend.delivery_info', compact('carts','carrier_list'));
     }
 
     public function store_delivery_info(Request $request)

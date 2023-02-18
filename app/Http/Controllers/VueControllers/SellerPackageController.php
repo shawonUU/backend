@@ -147,14 +147,21 @@ class SellerPackageController extends Controller
     //@index
     public function packages_payment_list()
     {
-        $seller_packages_payment = SellerPackagePayment::with('seller_package')->where('user_id', Auth::user()->id)->paginate(15);
+        $seller_packages_payment = SellerPackagePayment::with('seller_package')->where('user_id', Auth::user()->id)->paginate(10);
+        $total_seller_packages_payment = SellerPackagePayment::with('seller_package')->where('user_id', Auth::user()->id)->count();
+        return response()->json(['seller_packages_payment'=>$seller_packages_payment,'total_seller_packages_payment'=>$total_seller_packages_payment]);
         return view('seller_packages.frontend.packages_payment_list', compact('seller_packages_payment'));
     }
 
     public function seller_packages_list()
     {
         $seller_packages = SellerPackage::all();
-        return view('seller_packages.frontend.seller_packages_list', compact('seller_packages'));
+         foreach($seller_packages as $key=>$seller_package){
+            $seller_package->logo = uploaded_asset($seller_package->logo);
+         }
+         $offline_payment = addon_is_activated('offline_payment');
+        return response()->json(['seller_packages'=>$seller_packages,'offline_payment'=>$offline_payment]);
+        // return view('seller_packages.frontend.seller_packages_list', compact('seller_packages'));
     }
 
     public function purchase_package(Request $request)
