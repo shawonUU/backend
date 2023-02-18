@@ -18,6 +18,13 @@ class CouponController extends Controller
     public function index()
     {
         $coupons = Coupon::where('user_id', Auth::user()->id)->orderBy('id','desc')->get();
+        foreach($coupons as $key=>$coupon){
+            $coupon->start_date = date('d-m-Y', $coupon->start_date);
+            $coupon->end_date = date('d-m-Y', $coupon->end_date);
+        }
+        return response()->json([
+            'coupons'=>$coupons
+        ]);
         return view('seller.coupons.index', compact('coupons'));
     }
 
@@ -95,9 +102,11 @@ class CouponController extends Controller
      */
     public function destroy($id)
     {
+
         Coupon::destroy($id);
-        flash(translate('Coupon has been deleted successfully'))->success();
-        return redirect()->route('seller.coupon.index');
+        return response()->json(['success'=>true,200]);
+        // flash(translate(''))->success();
+        // return redirect()->route('seller.coupon.index');
     }
 
     public function get_coupon_form(Request $request)
