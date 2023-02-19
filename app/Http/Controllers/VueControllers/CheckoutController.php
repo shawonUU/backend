@@ -17,8 +17,10 @@ use App\Utility\PayhereUtility;
 use App\Utility\NotificationUtility;
 use Session;
 use Auth;
+use App\Http\Resources\VUE\ProductCollection;
 
 use App\Http\Resources\VUE\AddressCollection;
+use App\Http\Resources\VUE\CarrierCollection;
 
 class CheckoutController extends Controller
 {
@@ -138,9 +140,36 @@ class CheckoutController extends Controller
             $worning = "Your cart is empty";
         }
 
+        $admin_products = array();
+        $seller_products = array();
+
         foreach ($carts as $key => $cartItem) {
             $cartItem->address_id = $request->address_id;
             $cartItem->save();
+
+            $product = \App\Models\Product::find($cartItem['product_id']);
+
+            if($product->added_by == 'admin'){
+                $product = new ProductCollection([$product]);
+                array_push($admin_products, $product);
+            }
+            else{
+                $product_ids = array();
+                if(isset($seller_products[$product->user_id])){
+                    $product_ids = $seller_products[$product->user_id];
+                }
+
+                $salerProduct = new ProductCollection([$product]);
+                array_push($product_ids, $salerProduct);
+                $seller_products[$product->user_id] = $product_ids;
+            }
+        }
+
+        $shipping_type = get_setting('shipping_type');
+
+        $pickup_point_list = array();
+        if (get_setting('pickup_point') == 1) {
+            $pickup_point_list = \App\Models\PickupPoint::where('pick_up_status',1)->get();
         }
 
         $carrier_list = array();
@@ -152,9 +181,16 @@ class CheckoutController extends Controller
                 $query->select('carrier_id')->from('carrier_range_prices')
                 ->where('zone_id', $zone);
             })->orWhere('free_shipping', 1);
-            $carrier_list = $carrier_query->get();
+            $carrier_list = new CarrierCollection($carrier_query->get());
         }
-        return response()->json(["worning" => $worning, 'carts' => $carts, 'carrier_list' => $carrier_list], 200);
+        return response()->json([
+            "worning" => $worning, 
+            'carts' => $carts, 
+            'carrier_list' => $carrier_list,
+            'admin_products' => $admin_products,
+            'seller_products' => $seller_products,
+            'shipping_type' => $shipping_type,
+        ], 200);
         // return view('frontend.delivery_info', compact('carts','carrier_list'));
     }
 

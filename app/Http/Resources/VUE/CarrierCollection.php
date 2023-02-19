@@ -25,6 +25,7 @@ class CarrierCollection extends ResourceCollection
                     'transit_time'  => (integer) $data->transit_time,
                     'free_shipping' => $data->free_shipping == 1 ? true : false,
                     'transit_price' => single_price(carrier_base_price(auth()->user()->carts, $data->id, $this->ownerId)),
+                    // 'headline'      => headline($carrier->carrier_ranges->first()->billing_type),
                 ];
             })
         ];
