@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\VueControllers\Seller;
 
-use Illuminate\Http\Request;
-use Auth;
 use DB;
+use Auth;
+use App\Models\User;
+use App\Models\Product;
+use Illuminate\Http\Request;
 
 class ReviewController extends Controller
 {
@@ -14,17 +16,19 @@ class ReviewController extends Controller
                     ->orderBy('id', 'desc')
                     ->join('products', 'reviews.product_id', '=', 'products.id')
                     ->where('products.user_id', Auth::user()->id)
-                    ->select('reviews.id')
+                    ->select('reviews.id','products.id as product_id','reviews.user_id')
                     ->distinct()
                     ->paginate(9);
 
+        $review = [];
         foreach ($reviews as $key => $value) {
-            $review = \App\Models\Review::find($value->id);
-            $review->viewed = 1;
-            $review->save();
+            $review[$key] = \App\Models\Review::find($value->id);
+            $review[$key]->viewed = 1;
+            $review[$key]->product = Product::where('id',$value->product_id)->select('name','slug','digital')->first();
+            $review[$key]->user = User::where('id',$value->user_id)->first('name');
         }
-        return $reviews;
-        return view('seller.reviews', compact('reviews'));
+        return response()->json(['reviews'=>$review]);
+        // return view('seller.reviews', compact('reviews'));
     }
 
 }

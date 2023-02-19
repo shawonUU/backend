@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\VueControllers;
+namespace App\Http\Controllers\VueControllers\Seller;
 use App\Models\job;
 use App\Models\application;
 use Illuminate\Http\Request;
@@ -18,9 +18,10 @@ class jobController extends Controller
     public function index()
     {
         $jobs=Job::where('user_id',Auth::user()->id)->paginate('10');
-       
+        $totalJobs=Job::where('user_id',Auth::user()->id)->count();
         return response()->json([
             'jobs'=>$jobs,
+            'totalJobs'=>$totalJobs
         ]);
         return view('seller.job.index',compact('jobs'));
     }

@@ -62,6 +62,7 @@ Route::group(['namespace' => 'App\Http\Controllers\VueControllers\Seller', 'pref
 
     //Coupon
     Route::resource('coupon', CouponController::class);
+    Route::get('/coupon-delete/{id}',[\App\Http\Controllers\VueControllers\Seller\CouponController::class,'destroy']);
     Route::controller(CouponController::class)->group(function () {
         Route::post('/coupon/get_form', 'get_coupon_form')->name('coupon.get_coupon_form');
         Route::post('/coupon/get_form_edit', 'get_coupon_form_edit')->name('coupon.get_coupon_form_edit');
@@ -130,7 +131,12 @@ Route::group(['namespace' => 'App\Http\Controllers\VueControllers\Seller', 'pref
         Route::post('conversations/refresh', 'refresh')->name('conversations.refresh');
         Route::post('conversations/message/store', 'message_store')->name('conversations.message_store');
     });
+    //Jobs
+    // Route::resource('job',jobController::class);
+    Route::controller(jobController::class)->group(function () {
+        Route::get('/jobs', 'index')->name('jobs.index');
 
+    });
     // product query (comments) show on seller panel
     Route::controller(ProductQueryController::class)->group(function () {
         Route::get('/product-queries', 'index')->name('product_query.index');
