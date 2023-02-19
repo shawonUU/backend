@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\VueControllers\Seller;
 
-use App\Models\Order;
-use App\Models\ProductStock;
-use App\Models\SmsTemplate;
-use App\Models\User;
-use App\Utility\NotificationUtility;
-use App\Utility\SmsUtility;
-use Illuminate\Http\Request;
-use Auth;
 use DB;
+use Auth;
+use App\Models\User;
+use App\Models\Order;
+use App\Models\OrderDetail;
+use App\Models\SmsTemplate;
+use App\Utility\SmsUtility;
+use App\Models\ProductStock;
+use Illuminate\Http\Request;
+use App\Utility\NotificationUtility;
 
 class OrderController extends Controller
 {
@@ -27,7 +28,7 @@ class OrderController extends Controller
         $orders = DB::table('orders')
             ->orderBy('id', 'desc')
             ->where('seller_id', Auth::user()->id)
-            ->select('orders.id')
+            ->select('orders.id','orders.user_id','orders.delivery_status')
             ->distinct();
 
         if ($request->payment_status != null) {
@@ -45,13 +46,17 @@ class OrderController extends Controller
 
         $orders = $orders->paginate(15);
 
-        foreach ($orders as $key => $value) {
-            $order = Order::find($value->id);
-            $order->viewed = 1;
-            $order->save();
-        }
+        $order = [];
 
-        return view('seller.orders.index', compact('orders', 'payment_status', 'delivery_status', 'sort_search'));
+        foreach ($orders as $key => $value) {
+            $order[$key] = Order::find($value->id);
+            $order[$key]->user = User::find($value->user_id);
+            $order[$key]->number_of_products = OrderDetail::where('seller_id',Auth::user()->id)->where('order_id',$value->id)->count();
+            $order[$key]->delivery_status  = ucfirst(str_replace('_', ' ', $value->delivery_status));
+            $order[$key]->viewed = 1;
+        }
+        return response()->json(['orders'=>$order]);
+        // return view('seller.orders.index', compact('orders', 'payment_status', 'delivery_status', 'sort_search'));
     }
 
     public function show($id)
