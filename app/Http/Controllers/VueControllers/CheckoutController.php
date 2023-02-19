@@ -109,7 +109,7 @@ class CheckoutController extends Controller
         // if ($carts && count($carts) > 0) {
         //     $categories = Category::all();
 
-           
+
         //     // return view('frontend.shipping_info', compact('categories', 'carts'));
         // }
         // flash(translate('Your cart is empty'))->success();
@@ -120,7 +120,7 @@ class CheckoutController extends Controller
     }
 
     public function getAddressInfo(){
-        
+
         $country = \App\Models\Country::where('status', 1)->get();
 
         return $country;
@@ -183,13 +183,18 @@ class CheckoutController extends Controller
             })->orWhere('free_shipping', 1);
             $carrier_list = new CarrierCollection($carrier_query->get());
         }
+        $site_name = get_setting('site_name');
+        $adminId = \App\Models\User::where('user_type', 'admin')->first()->id;
         return response()->json([
-            "worning" => $worning, 
-            'carts' => $carts, 
+            "worning" => $worning,
+            'carts' => $carts,
             'carrier_list' => $carrier_list,
             'admin_products' => $admin_products,
             'seller_products' => $seller_products,
             'shipping_type' => $shipping_type,
+            'site_name' => $site_name,
+            'adminId' =>$adminId,
+            'pickup_point_list' => $pickup_point_list,
         ], 200);
         // return view('frontend.delivery_info', compact('carts','carrier_list'));
     }
