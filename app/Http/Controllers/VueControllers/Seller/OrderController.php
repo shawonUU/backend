@@ -4,14 +4,17 @@ namespace App\Http\Controllers\VueControllers\Seller;
 
 use DB;
 use Auth;
+use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\OrderDetail;
 use App\Models\SmsTemplate;
 use App\Utility\SmsUtility;
 use App\Models\ProductStock;
 use Illuminate\Http\Request;
 use App\Utility\NotificationUtility;
+use App\Http\Resources\VUE\ProductMiniDetailsCollection;
 
 class OrderController extends Controller
 {
@@ -28,7 +31,7 @@ class OrderController extends Controller
         $orders = DB::table('orders')
             ->orderBy('id', 'desc')
             ->where('seller_id', Auth::user()->id)
-            ->select('orders.id','orders.user_id','orders.delivery_status')
+            ->select('orders.id','orders.user_id','orders.delivery_status','orders.updated_at')
             ->distinct();
 
         if ($request->payment_status != null) {
@@ -39,37 +42,62 @@ class OrderController extends Controller
             $orders = $orders->where('delivery_status', $request->delivery_status);
             $delivery_status = $request->delivery_status;
         }
-        if ($request->has('search')) {
+        if ($request->search != null) {
             $sort_search = $request->search;
             $orders = $orders->where('code', 'like', '%' . $sort_search . '%');
         }
-
-        $orders = $orders->paginate(15);
+        $totalOrder = $orders->count();
+        $orders = $orders->paginate(10);
 
         $order = [];
-
+        $today= Carbon::today();
         foreach ($orders as $key => $value) {
             $order[$key] = Order::find($value->id);
             $order[$key]->user = User::find($value->user_id);
             $order[$key]->number_of_products = OrderDetail::where('seller_id',Auth::user()->id)->where('order_id',$value->id)->count();
             $order[$key]->delivery_status  = ucfirst(str_replace('_', ' ', $value->delivery_status));
+            $order[$key]->diffdate = $today->diffInDays($value->updated_at);
             $order[$key]->viewed = 1;
         }
-        return response()->json(['orders'=>$order]);
+        return response()->json(['orders'=>$order,'totalOrder'=>$totalOrder]);
         // return view('seller.orders.index', compact('orders', 'payment_status', 'delivery_status', 'sort_search'));
     }
 
     public function show($id)
     {
-        $order = Order::findOrFail(decrypt($id));
+        $order = Order::findOrFail($id);
         $order_shipping_address = json_decode($order->shipping_address);
         $delivery_boys = User::where('city', $order_shipping_address->city)
             ->where('user_type', 'delivery_boy')
             ->get();
-
+        $user = User::find($order->user_id);
         $order->viewed = 1;
-        $order->save();
-        return view('seller.orders.show', compact('order', 'delivery_boys'));
+        $order->order_date = date('d-m-Y h:i A', $order->date);
+        $order->payment_type = ucfirst(str_replace('_', ' ', $order->payment_type));
+        $order->orderDetails = $order->orderDetails;
+
+            foreach($order->orderDetails as $key => $product){
+                $product->product_info = Product::where('id',$product->product_id)->first();
+                $product->product_info->img = uploaded_asset($product->product_info->thumbnail_img);
+                $order->orderDetails[$key] = $product;
+            }
+
+            // foreach( $data->reviews as $key => $review ){
+            //     $review->image = uploaded_asset($review->image);
+            //     $review->user_name =User::find($review->user_id)->name;
+            //     $review->created = date('d-m-Y', strtotime($review->created_at));
+            //     $review->updated= date('d-m-Y', strtotime($review->updated_at));
+            //     $data->reviews[$key]=$review;
+            // }
+        return response()->json([
+            'order'=>$order,
+            'delivery_boys'=>$delivery_boys,
+            'order_shipping_address'=>$order_shipping_address,
+            'user'=>$user,
+            'products' => $order->orderDetails
+        ]);
+        // $order->save();
+        // return view('seller.orders.show', compact('order', 'delivery_boys'));
     }
 
     // Update Delivery Status
