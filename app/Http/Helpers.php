@@ -801,6 +801,7 @@ function remove_invalid_charcaters($str)
 
 function getShippingCost($carts, $index, $carrier = '')
 {
+    // echo '***<br>';
     $shipping_type = get_setting('shipping_type');
     $admin_products = array();
     $seller_products = array();
@@ -908,6 +909,7 @@ function getShippingCost($carts, $index, $carrier = '')
 if (!function_exists('carrier_base_price')) {
     function carrier_base_price($carts, $carrier_id, $owner_id)
     {
+        // echo '===<br>';
         $shipping = 0;
         foreach ($carts as $key => $cartItem) {
             if ($cartItem->owner_id == $owner_id) {

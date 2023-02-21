@@ -10,6 +10,9 @@ class ProductCollection extends ResourceCollection
     {
         return [
                'data' => $this->collection->map(function($data) {
+
+                // if(!isset($data->photos))dd($data);
+                
                 $photos = explode(',', $data->photos);
                 $photoLink = [];
                 foreach($photos as $photo){
@@ -19,6 +22,7 @@ class ProductCollection extends ResourceCollection
                 return [
                     'id' => $data->id,
                     'name' => $data->getTranslation('name'),
+                    'shop_name' => $data->shop_name,
                     'digital'=>$data->digital,
                     'auction_product' => $data->auction_product,
                     'min_qty' => $data->min_qty,
