@@ -126,15 +126,21 @@ class CheckoutController extends Controller
         return $country;
     }
 
-    public function store_shipping_info(Request $request)
-    {
+    public function store_shipping_info(){
+        $carts = Cart::where('user_id', Auth::user()->id)->get();
+
+        foreach ($carts as $key => $cartItem) {
+            $cartItem->address_id = $request->address_id;
+            $cartItem->save();
+        }
+    }
+
+    public function get_delivery_info(Request $request)
+    { 
+
         $worning = null;
 
-        if ($request->address_id == null) {
-            // flash(translate("Please add shipping address"))->warning();
-            $worning = "Please add shipping address";
-        }
-
+       
         $carts = Cart::where('user_id', Auth::user()->id)->get();
         if($carts->isEmpty()) {
             $worning = "Your cart is empty";
@@ -143,28 +149,8 @@ class CheckoutController extends Controller
         $admin_products = array();
         $seller_products = array();
 
-        foreach ($carts as $key => $cartItem) {
-            $cartItem->address_id = $request->address_id;
-            $cartItem->save();
 
-            $product = \App\Models\Product::find($cartItem['product_id']);
-
-            if($product->added_by == 'admin'){
-                $product = new ProductCollection([$product]);
-                array_push($admin_products, $product);
-            }
-            else{
-                $product_ids = array();
-                if(isset($seller_products[$product->user_id])){
-                    $product_ids = $seller_products[$product->user_id];
-                }
-
-                $salerProduct = new ProductCollection([$product]);
-                array_push($product_ids, $salerProduct);
-                $seller_products[$product->user_id] = $product_ids;
-            }
-        }
-
+        
         $shipping_type = get_setting('shipping_type');
 
         $pickup_point_list = array();
@@ -173,7 +159,9 @@ class CheckoutController extends Controller
         }
 
         $carrier_list = array();
-        if(get_setting('shipping_type') == 'carrier_wise_shipping'){
+        $zone = null;
+
+        if(get_setting('shipping_type') == 'carrier_wise_shipping' && $worning==null){
             $zone = \App\Models\Country::where('id',$carts[0]['address']['country_id'])->first()->zone_id;
 
             $carrier_query = Carrier::query();
@@ -181,14 +169,62 @@ class CheckoutController extends Controller
                 $query->select('carrier_id')->from('carrier_range_prices')
                 ->where('zone_id', $zone);
             })->orWhere('free_shipping', 1);
-            $carrier_list = new CarrierCollection($carrier_query->get());
         }
+
+        
         $site_name = get_setting('site_name');
         $adminId = \App\Models\User::where('user_type', 'admin')->first()->id;
+
+
+
+        $carrier_list = $carrier_query->get();
+
+        foreach ($carts as $key => $cartItem) {
+            
+
+            $product = \App\Models\Product::find($cartItem['product_id']);
+
+
+            if($product->added_by == 'admin'){
+                $product = new ProductCollection([$product]);
+
+                $carrierList = $carrier_list;
+                foreach($carrierList as $carrier_key => $carrier){
+                    $carrier->logo = uploaded_asset($carrier->logo);
+                    $carrier->carrier_base_price = single_price(carrier_base_price($carts, $carrier->id, $adminId));
+                    $carrierList[$carrier_key] = $carrier;
+                }
+                array_push($admin_products, ['products' => $product, 'carrier_list' => $carrierList]);
+            }
+            else{
+                $product_ids = array();
+                if(isset($seller_products[$product->user_id])){
+                    $product_ids = $seller_products[$product->user_id]['products'];
+                }
+
+                $shopName = \App\Models\Shop::where('user_id', $product->user_id)->first()->name;
+                $product->shop_name = $shopName;
+
+                $salerProduct = new ProductCollection([$product]);
+                array_push($product_ids, $salerProduct);
+                
+                $productUserId = 1;
+                // $productUserId = $product->user_id;
+
+                $seller_products[$product->user_id]['products'] = $product_ids;
+
+                $carrierList = $carrier_list;
+                foreach($carrierList as $carrier_key => $carrier){
+                    $carrier->logo_img = uploaded_asset($carrier->logo);
+                    $carrier->carrier_base_price = single_price(carrier_base_price($carts, $carrier->id, $productUserId));
+                    $carrierList[$carrier_key] = $carrier;
+                }
+                $seller_products[$product->user_id]["carrier_list"] = $carrierList;
+            }
+        }
         return response()->json([
             "worning" => $worning,
             'carts' => $carts,
-            'carrier_list' => $carrier_list,
             'admin_products' => $admin_products,
             'seller_products' => $seller_products,
             'shipping_type' => $shipping_type,
@@ -201,15 +237,15 @@ class CheckoutController extends Controller
 
     public function store_delivery_info(Request $request)
     {
-        $carts = Cart::where('user_id', Auth::user()->id)
-                ->get();
+        return $request;
+        $carts = Cart::where('user_id', Auth::user()->id)->get();
 
         if($carts->isEmpty()) {
             flash(translate('Your cart is empty'))->warning();
             return redirect()->route('home');
         }
 
-        $shipping_info = Address::where('id', $carts[0]['address_id'])->first();
+        // $shipping_info = Address::where('id', $carts[0]['address_id'])->first();
         $total = 0;
         $tax = 0;
         $shipping = 0;
@@ -244,12 +280,13 @@ class CheckoutController extends Controller
             }
             $total = $subtotal + $tax + $shipping;
 
-            return view('frontend.payment_select', compact('carts', 'shipping_info', 'total'));
+            // return view('frontend.payment_select', compact('carts', 'shipping_info', 'total'));
 
-        } else {
-            flash(translate('Your Cart was empty'))->warning();
-            return redirect()->route('home');
-        }
+        } 
+        // else {
+        //     flash(translate('Your Cart was empty'))->warning();
+        //     return redirect()->route('home');
+        // }
     }
 
     public function apply_coupon_code(Request $request)
