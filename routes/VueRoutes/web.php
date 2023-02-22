@@ -318,11 +318,12 @@ Route::group(['middleware' => ['auth:sanctum','customer', 'verified', 'unbanned'
     // Checkout Routs
     Route::group(['prefix' => 'checkout'], function() {
         Route::controller(CheckoutController::class)->group(function () {
-            
+
             Route::get('/get_delivery_info', 'get_delivery_info')->name('get_delivery_info');
             Route::get('/', 'get_shipping_info')->name('checkout.shipping_info');
             Route::any('/delivery_info', 'store_shipping_info')->name('checkout.store_shipping_infostore');
             Route::get('/payment_select', 'store_delivery_info')->name('checkout.store_delivery_info');
+            Route::get('/payment_info', 'payment_info')->name('payment_info');
             Route::get('/order-confirmed', 'order_confirmed')->name('order_confirmed');
             Route::post('/payment', 'checkout')->name('payment.checkout');
             Route::post('/get_pick_up_points', 'get_pick_up_points')->name('shipping_info.get_pick_up_points');

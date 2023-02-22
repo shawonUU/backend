@@ -136,11 +136,11 @@ class CheckoutController extends Controller
     }
 
     public function get_delivery_info(Request $request)
-    { 
+    {
 
         $worning = null;
 
-       
+
         $carts = Cart::where('user_id', Auth::user()->id)->get();
         if($carts->isEmpty()) {
             $worning = "Your cart is empty";
@@ -150,7 +150,7 @@ class CheckoutController extends Controller
         $seller_products = array();
 
 
-        
+
         $shipping_type = get_setting('shipping_type');
 
         $pickup_point_list = array();
@@ -171,7 +171,7 @@ class CheckoutController extends Controller
             })->orWhere('free_shipping', 1);
         }
 
-        
+
         $site_name = get_setting('site_name');
         $adminId = \App\Models\User::where('user_type', 'admin')->first()->id;
 
@@ -180,7 +180,7 @@ class CheckoutController extends Controller
         $carrier_list = $carrier_query->get();
 
         foreach ($carts as $key => $cartItem) {
-            
+
 
             $product = \App\Models\Product::find($cartItem['product_id']);
 
@@ -207,7 +207,7 @@ class CheckoutController extends Controller
 
                 $salerProduct = new ProductCollection([$product]);
                 array_push($product_ids, $salerProduct);
-                
+
                 $productUserId = 1;
                 // $productUserId = $product->user_id;
 
@@ -235,9 +235,10 @@ class CheckoutController extends Controller
         // return view('frontend.delivery_info', compact('carts','carrier_list'));
     }
 
+
     public function store_delivery_info(Request $request)
     {
-        return $request;
+        // return $request;
         $carts = Cart::where('user_id', Auth::user()->id)->get();
 
         if($carts->isEmpty()) {
@@ -282,11 +283,129 @@ class CheckoutController extends Controller
 
             // return view('frontend.payment_select', compact('carts', 'shipping_info', 'total'));
 
-        } 
+        }
         // else {
         //     flash(translate('Your Cart was empty'))->warning();
         //     return redirect()->route('home');
         // }
+    }
+
+    public function payment_info(){
+
+        $carts = Cart::where('user_id', Auth::user()->id)->get();
+        $shipping_info = Address::where('id', $carts[0]['address_id'])->first();
+
+        $total = 0;
+        $tax = 0;
+        $shipping = 0;
+        $subtotal = 0;
+        $digital = 0;
+        $cod_on = 1;
+        $coupon_code = null;
+        $coupon_discount = 0;
+        $ck = 0;
+
+        if ($carts && count($carts) > 0) {
+            foreach ($carts as $key => $cartItem) {
+                $product = Product::find($cartItem['product_id']);
+                $tax += cart_product_tax($cartItem, $product,false) * $cartItem['quantity'];
+                $subtotal += cart_product_price($cartItem, $product, false, false) * $cartItem['quantity'];
+
+                $shipping += $cartItem['shipping_cost'];
+
+                if ($product['digital'] == 1) {$digital = 1; }
+                if ($product['cash_on_delivery'] == 0) {$cod_on = 0;}
+
+                if (Auth::check() && get_setting('coupon_system') == 1){
+                    if ($cartItem->coupon_applied == 1 && $ck==0){
+                        $coupon_code = $cartItem->coupon_code;
+                        $ck = 1;
+                    }
+                }
+
+            }
+
+            if (Auth::check() && get_setting('coupon_system') == 1){
+                $coupon_discount = carts_coupon_discount($coupon_code);
+                $coupon_discount_single_price = single_price(carts_coupon_discount($coupon_code));
+            }
+
+            $total = $subtotal + $tax + $shipping;
+        }
+
+        $manualPaymentMethods = \App\Models\ManualPaymentMethod::all();
+        foreach ($manualPaymentMethods as $key => $method){
+            $method->photo = uploaded_asset($method->photo);
+            $manualPaymentMethods[$key] = $method;
+
+            if ($method->bank_info != null){
+                $method->bank_info = json_decode($method->bank_info);
+            }
+        }
+
+        $paymentMethod = [
+            'paypal_payment' => get_setting('paypal_payment'),
+            'paypal_img' => static_asset('assets/img/cards/paypal.png'),
+            'stripe_payment' => get_setting('stripe_payment'),
+            'stripe_img' => static_asset('assets/img/cards/stripe.png'),
+            'mercadopago_payment' => get_setting('mercadopago_payment'),
+            'mercadopago_img' => static_asset('assets/img/cards/mercadopago.png'),
+            'sslcommerz_payment' => get_setting('sslcommerz_payment'),
+            'sslcommerz_img' => static_asset('assets/img/cards/sslcommerz.png'),
+            'instamojo_payment' => get_setting('instamojo_payment'),
+            'instamojo_img'=> static_asset('assets/img/cards/instamojo.png'),
+            'razorpay' => get_setting('razorpay'),
+            'razorpay_img' => static_asset('assets/img/cards/rozarpay.png'),
+            'paystack' => get_setting('paystack'),
+            'paystack_img' => static_asset('assets/img/cards/paystack.png'),
+            'voguepay' => get_setting('voguepay'),
+            'voguepay_img' => static_asset('assets/img/cards/vogue.png'),
+            'payhere' => get_setting('payhere'),
+            'payhere_img' => static_asset('assets/img/cards/payhere.png'),
+            'ngenius' => get_setting('ngenius'),
+            'ngenius_img' => static_asset('assets/img/cards/ngenius.png'),
+            'iyzico' => get_setting('iyzico'),
+            'iyzico_img' => static_asset('assets/img/cards/iyzico.png'),
+            'nagad' => get_setting('nagad'),
+            'nagad_img' => static_asset('assets/img/cards/nagad.png'),
+            'bkash' => get_setting('bkash'),
+            'bkash_img' => static_asset('assets/img/cards/bkash.png'),
+            'aamarpay' => get_setting('aamarpay'),
+            'aamarpay_img' => static_asset('assets/img/cards/aamarpay.png'),
+            'authorizenet' => get_setting('authorizenet'),
+            'authorizenet_img' => static_asset('assets/img/cards/authorizenet.png'),
+            'payku' => get_setting('payku'),
+            'payku_img' => static_asset('assets/img/cards/payku.png'),
+            'african_pg' => addon_is_activated('african_pg'),
+            'mpesa' => get_setting('mpesa'),
+            'mpesa_img' => static_asset('assets/img/cards/mpesa.png'),
+            'flutterwave' => get_setting('flutterwave'),
+            'flutterwave_img' => static_asset('assets/img/cards/flutterwave.png'),
+            'payfast' => get_setting('payfast'),
+            'payfast_img' => static_asset('assets/img/cards/payfast.png'),
+            'paytm' => addon_is_activated('paytm'),
+            'paytm_payment' => get_setting('paytm_payment'),
+            'paytm_payment_img'=> static_asset('assets/img/cards/paytm.jpg'),
+            'toyyibpay_payment' => get_setting('toyyibpay_payment'),
+            'toyyibpay_payment_img' => static_asset('assets/img/cards/toyyibpay.png'),
+            'cash_payment' => get_setting('cash_payment'),
+            'offline_payment' => addon_is_activated('offline_payment'),
+            'wallet_system' => get_setting('wallet_system'),
+            'user_balance' => single_price(Auth::user()->balance),
+            'total_single_price' => single_price($total),
+            'coupon_code' => $coupon_code,
+            'coupon_discount' => $coupon_discount,
+            'coupon_discount_single_price' => $coupon_discount_single_price,
+            'coupon_system' => get_setting('coupon_system'),
+        ];
+
+
+        return response()->json([
+            'carts' => $carts,
+            'shipping_info' => $shipping_info,
+            'total' => $total,
+
+        ], 200);
     }
 
     public function apply_coupon_code(Request $request)
