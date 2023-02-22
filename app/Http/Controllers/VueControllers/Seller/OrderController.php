@@ -74,11 +74,15 @@ class OrderController extends Controller
         $order->viewed = 1;
         $order->order_date = date('d-m-Y h:i A', $order->date);
         $order->payment_type = ucfirst(str_replace('_', ' ', $order->payment_type));
+        $order->product_sub_total =single_price($order->orderDetails->sum('price'));
+        $order->tax_total =single_price($order->orderDetails->sum('tax'));
+        $order->total_shipping =single_price($order->orderDetails->sum('shipping_cost'));
         $order->orderDetails = $order->orderDetails;
 
             foreach($order->orderDetails as $key => $product){
                 $product->product_info = Product::where('id',$product->product_id)->first();
                 $product->product_info->img = uploaded_asset($product->product_info->thumbnail_img);
+                $product->product_price = single_price($product->price / $product->quantity);
                 $order->orderDetails[$key] = $product;
             }
 
