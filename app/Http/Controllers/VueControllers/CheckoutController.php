@@ -296,6 +296,7 @@ class CheckoutController extends Controller
         $shipping_info = Address::where('id', $carts[0]['address_id'])->first();
 
         $total = 0;
+        $total_point = 0;
         $tax = 0;
         $shipping = 0;
         $subtotal = 0;
@@ -303,15 +304,19 @@ class CheckoutController extends Controller
         $cod_on = 1;
         $coupon_code = null;
         $coupon_discount = 0;
+        $subtotal_for_min_order_amount = 0;
         $ck = 0;
 
         if ($carts && count($carts) > 0) {
             foreach ($carts as $key => $cartItem) {
                 $product = Product::find($cartItem['product_id']);
                 $tax += cart_product_tax($cartItem, $product,false) * $cartItem['quantity'];
-                $subtotal += cart_product_price($cartItem, $product, false, false) * $cartItem['quantity'];
+                $temp_cart_product_price = cart_product_price($cartItem, $product, false, false) * $cartItem['quantity'];
+                $subtotal += $temp_cart_product_price;
 
                 $shipping += $cartItem['shipping_cost'];
+
+                $total_point += $product->earn_point * $cartItem['quantity'];
 
                 if ($product['digital'] == 1) {$digital = 1; }
                 if ($product['cash_on_delivery'] == 0) {$cod_on = 0;}
@@ -323,11 +328,19 @@ class CheckoutController extends Controller
                     }
                 }
 
+                $product_name_with_choice = $product->getTranslation('name');
+                if ($cartItem['variant'] != null) {
+                    $product_name_with_choice = $product->getTranslation('name') . ' - ' . $cartItem['variant'];
+                }
+                $cart_product_single_price = single_price($temp_cart_product_price);
+
+                $carts[$key]->product_name_with_choice = $product_name_with_choice;
+                $carts[$key]->cart_product_single_price = $cart_product_single_price;
+
             }
 
             if (Auth::check() && get_setting('coupon_system') == 1){
                 $coupon_discount = carts_coupon_discount($coupon_code);
-                $coupon_discount_single_price = single_price(carts_coupon_discount($coupon_code));
             }
 
             $total = $subtotal + $tax + $shipping;
@@ -391,20 +404,36 @@ class CheckoutController extends Controller
             'cash_payment' => get_setting('cash_payment'),
             'offline_payment' => addon_is_activated('offline_payment'),
             'wallet_system' => get_setting('wallet_system'),
-            'user_balance' => single_price(Auth::user()->balance),
+            'user_balance' => Auth::user()->balance,
+            'user_balance_single_price' => single_price(Auth::user()->balance),
+            'total' => $total,
             'total_single_price' => single_price($total),
             'coupon_code' => $coupon_code,
             'coupon_discount' => $coupon_discount,
-            'coupon_discount_single_price' => $coupon_discount_single_price,
+            'coupon_discount_single_price' => single_price($coupon_discount),
             'coupon_system' => get_setting('coupon_system'),
+            'digital' => $digital,
+            'cod_on' => $cod_on,
+            'cod_on_img' => static_asset('assets/img/cards/cod.png'),
+            'shipping_info' => $shipping_info,
+            'carts' => $carts,
+            'manualPaymentMethods' => $manualPaymentMethods,
+            'minimum_order_amount_check' => get_setting('minimum_order_amount_check'),
+            'subtotal' => $subtotal,
+            'subtotal_single_price' => single_price($subtotal),
+            'minimum_order_amount' => get_setting('minimum_order_amount'),
+            'minimum_order_amount_single_price' => single_price(get_setting('minimum_order_amount')),
+            'club_point' => addon_is_activated('club_point'),
+            'total_point' => $total_point,
+            'tax' => $tax,
+            'tax_single_price' => single_price($tax),
+            'shipping_single_price' => single_price($shipping),
+            'shipping' => $shipping,
+
         ];
 
-        return response()->json([
-            'carts' => $carts,
-            'shipping_info' => $shipping_info,
-            'total' => $total,
 
-        ], 200);
+        return response()->json($paymentMethod);
     }
 
     public function apply_coupon_code(Request $request)
