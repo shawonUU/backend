@@ -399,7 +399,6 @@ class CheckoutController extends Controller
             'coupon_system' => get_setting('coupon_system'),
         ];
 
-
         return response()->json([
             'carts' => $carts,
             'shipping_info' => $shipping_info,
