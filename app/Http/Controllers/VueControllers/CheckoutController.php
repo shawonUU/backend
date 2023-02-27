@@ -43,6 +43,7 @@ class CheckoutController extends Controller
                 $product = Product::find($cartItem['product_id']);
                 $subtotal += cart_product_price($cartItem, $product, false, false) * $cartItem['quantity'];
             }
+            // return get_setting('minimum_order_amount');
             if ($subtotal < get_setting('minimum_order_amount')) {
                 $returnType = "worning";
                 $message = 'You order amount is less then the minimum order amount';
@@ -86,6 +87,8 @@ class CheckoutController extends Controller
             $returnType = "worning";
             $message = 'Select Payment Option.';
         }
+
+        return response()->json(["returnType" => $returnType, "message" => $message], 200);
     }
 
     //redirects to this method after a successfull checkout
