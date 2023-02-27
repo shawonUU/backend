@@ -34,6 +34,9 @@ class CheckoutController extends Controller
     public function checkout(Request $request)
     {
         // Minumum order amount check
+        $returnType = null;
+        $message = null;
+
         if(get_setting('minimum_order_amount_check') == 1){
             $subtotal = 0;
             foreach (Cart::where('user_id', Auth::user()->id)->get() as $key => $cartItem){
@@ -41,21 +44,20 @@ class CheckoutController extends Controller
                 $subtotal += cart_product_price($cartItem, $product, false, false) * $cartItem['quantity'];
             }
             if ($subtotal < get_setting('minimum_order_amount')) {
-                flash(translate('You order amount is less then the minimum order amount'))->warning();
-                return redirect()->route('home');
+                $returnType = "worning";
+                $message = 'You order amount is less then the minimum order amount';
             }
         }
-        // Minumum order amount check end
 
         if ($request->payment_option != null) {
             (new OrderController)->store($request);
 
-            $request->session()->put('payment_type', 'cart_payment');
+            // $request->session()->put('payment_type', 'cart_payment');
 
-            $data['combined_order_id'] = $request->session()->get('combined_order_id');
-            $request->session()->put('payment_data', $data);
+            $data['combined_order_id'] = $request->combined_order_id;
+            // $request->session()->put('payment_data', $data);
 
-            if ($request->session()->get('combined_order_id') != null) {
+            if ($request->combined_order_id != null) {
 
                 // If block for Online payment, wallet and cash on delivery. Else block for Offline payment
                 $decorator = __NAMESPACE__ . '\\Payment\\' . str_replace(' ', '', ucwords(str_replace('_', ' ', $request->payment_option))) . "Controller";
@@ -63,7 +65,7 @@ class CheckoutController extends Controller
                     return (new $decorator)->pay($request);
                 }
                 else {
-                    $combined_order = CombinedOrder::findOrFail($request->session()->get('combined_order_id'));
+                    $combined_order = CombinedOrder::findOrFail($request->combined_order_id);
                     $manual_payment_data = array(
                         'name'   => $request->payment_option,
                         'amount' => $combined_order->grand_total,
@@ -75,13 +77,14 @@ class CheckoutController extends Controller
                         $order->manual_payment_data = json_encode($manual_payment_data);
                         $order->save();
                     }
-                    flash(translate('Your order has been placed successfully. Please submit payment information from purchase history'))->success();
-                    return redirect()->route('order_confirmed');
+                    $returnType = "success";
+                    $message = 'Your order has been placed successfully. Please submit payment information from purchase history';
+                    // return redirect()->route('order_confirmed');
                 }
             }
         } else {
-            flash(translate('Select Payment Option.'))->warning();
-            return back();
+            $returnType = "worning";
+            $message = 'Select Payment Option.';
         }
     }
 
@@ -432,6 +435,7 @@ class CheckoutController extends Controller
 
         ];
 
+        // return view('frontend.payment_select', compact('carts', 'shipping_info', 'total'));
 
         return response()->json($paymentMethod);
     }
