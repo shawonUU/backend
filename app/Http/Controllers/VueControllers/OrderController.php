@@ -266,7 +266,9 @@ class OrderController extends Controller
 
         $combined_order->save();
 
-        $request->session()->put('combined_order_id', $combined_order->id);
+        return $combined_order->id;
+
+        // $request->session()->put('combined_order_id', $combined_order->id);
     }
 
     /**

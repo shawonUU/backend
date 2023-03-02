@@ -51,14 +51,14 @@ class CheckoutController extends Controller
         }
 
         if ($request->payment_option != null) {
-            (new OrderController)->store($request);
+           $combined_order_id = (new OrderController)->store($request);
 
             // $request->session()->put('payment_type', 'cart_payment');
 
-            $data['combined_order_id'] = $request->combined_order_id;
+            $data['combined_order_id'] = $combined_order_id;
             // $request->session()->put('payment_data', $data);
 
-            if ($request->combined_order_id != null) {
+            if ($combined_order_id != null) {
 
                 // If block for Online payment, wallet and cash on delivery. Else block for Offline payment
                 $decorator = __NAMESPACE__ . '\\Payment\\' . str_replace(' ', '', ucwords(str_replace('_', ' ', $request->payment_option))) . "Controller";
@@ -66,7 +66,7 @@ class CheckoutController extends Controller
                     return (new $decorator)->pay($request);
                 }
                 else {
-                    $combined_order = CombinedOrder::findOrFail($request->combined_order_id);
+                    $combined_order = CombinedOrder::findOrFail($combined_order_id);
                     $manual_payment_data = array(
                         'name'   => $request->payment_option,
                         'amount' => $combined_order->grand_total,
@@ -132,13 +132,15 @@ class CheckoutController extends Controller
         return $country;
     }
 
-    public function store_shipping_info(){
+    public function store_shipping_info(Request $request){
+        
         $carts = Cart::where('user_id', Auth::user()->id)->get();
 
         foreach ($carts as $key => $cartItem) {
             $cartItem->address_id = $request->address_id;
-            $cartItem->save();
+            $cartItem->update();
         }
+        return $request;
     }
 
     public function get_delivery_info(Request $request)
@@ -146,8 +148,7 @@ class CheckoutController extends Controller
 
         $worning = null;
 
-
-        $carts = Cart::where('user_id', Auth::user()->id)->get();
+         $carts = Cart::where('user_id', Auth::user()->id)->get();
         if($carts->isEmpty()) {
             $worning = "Your cart is empty";
         }
